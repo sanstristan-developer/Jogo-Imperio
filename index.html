@@ -527,16 +527,22 @@
             <p><strong>Condições de Vitória:</strong></p>
             <ul>
                 <li>Dominar <strong>33 ou mais</strong> dos 64 territórios do tabuleiro.</li>
-                <li><strong>OU</strong> Eliminar <strong>ambos o Sinhô e a Sinhá</strong> do jogador adversário.</li>
+                <li><strong>OU</strong> Eliminar <strong>ambos o Sinhô e a Sinhá</strong> do jogador adversário. (Se for eliminado apenas um deles, a partida continua!).</li>
             </ul>
-            <p><strong>Domínio de Território:</strong> Um território é dominado quando uma peça <em>termina</em> o seu movimento nessa casa.</p>
+            <p><strong>Domínio de Território:</strong> Um território é dominado quando uma peça <em>termina</em> o seu movimento nessa casa. Passar por uma casa não a domina. O território continua a pertencer ao jogador mesmo depois da peça sair dele.</p>
             <p><strong>Movimentação das Peças:</strong></p>
             <ul>
-                <li><strong>Escravos (♟):</strong> Movem-se 1 casa em qualquer direção.</li>
-                <li><strong>Sinhô (♚) e Sinhá (♛):</strong> Movem-se como o Bispo do xadrez (diagonais).</li>
-                <li><strong>Indígenas (🏹):</strong> Movem-se como a Rainha do xadrez (todas as direções).</li>
-                <li><strong>Jesuítas (✝):</strong> Movem-se como a Torre do xadrez (linhas retas).</li>
+                <li><strong>Escravos (♟):</strong> Movem-se 1 casa em qualquer direção (frente, trás, lados, diagonais).</li>
+                <li><strong>Sinhô (♚) e Sinhá (♛):</strong> Movem-se como o Bispo do xadrez (diagonais, qualquer distância).</li>
+                <li><strong>Indígenas (🏹):</strong> Movem-se como a Rainha do xadrez (todas as direções, qualquer distância).</li>
+                <li><strong>Jesuítas (✝):</strong> Movem-se como a Torre do xadrez (linhas retas ortogonais).</li>
                 <li><strong>Bandeirantes (🐎):</strong> Movem-se como o Cavalo do xadrez (em "L").</li>
+            </ul>
+            <p><strong>Domínio e Recuperação de Peças:</strong></p>
+            <ul>
+                <li><strong>Jesuítas:</strong> Quando alcancem um <em>Escravo</em> ou <em>Indígena</em> adversário, dominam a peça. A peça passa para o novo dono e permanece no jogo!</li>
+                <li><strong>Bandeirantes:</strong> Podem recuperar <em>Escravos</em> ou <em>Indígenas</em> originais da sua equipa que tenham sido dominados pelo adversário.</li>
+                <li><strong>Sinhô, Sinhá, Jesuítas e Bandeirantes:</strong> Não podem mudar de dono, mas são eliminados se uma peça adversária aterrar na sua casa.</li>
             </ul>
             <button class="modal-close" onclick="closeRulesModal()">Fechar</button>
         </div>
