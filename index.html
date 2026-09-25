@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo Império</title>
+    <link rel="icon" href="favicon.png" type="image/png">
+    <style>
+        :root {
+            --bg-color: #1a1612;
+            --panel-bg: #2a221b;
+            --accent-gold: #d4af37;
+            --p1-color: #2b6cb0;
+            --p1-light: #4299e1;
+            --p1-bg: rgba(66, 153, 225, 0.25);
+            --p2-color: #c53030;
+            --p2-light: #f56565;
+            --p2-bg: rgba(245, 101, 101, 0.25);
+            --tile-light: #e2d8c3;
+            --tile-dark: #b8a686;
+            --text-color: #f7fafc;
+            --text-dim: #a0aec0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 10px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            color: var(--accent-gold);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        header p {
+            color: var(--text-dim);
+            font-size: 0.95rem;
+            margin-top: 5px;
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: row;
+            gap: 25px;
+            max-width: 1200px;
+            width: 100%;
+            justify-content: center;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        /* Placar e Controlos */
+        .sidebar {
+            background-color: var(--panel-bg);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+        }
+
+        .status-box {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .turn-indicator {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .turn-badge {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* Progresso do Território */
+        .territory-tracker {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .player-score {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .score-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .progress-bar-bg {
+            background-color: #1a1612;
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .p1-fill { background-color: var(--p1-light); }
+        .p2-fill { background-color: var(--p2-light); }
+
+        .target-marker {
+            font-size: 0.8rem;
+            color: var(--accent-gold);
+            text-align: right;
+            margin-top: -2px;
+        }
+
+        /* Botões */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #d4af37, #aa820a);
+            color: #111;
+            border: none;
+            padding: 10px 15px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        button.secondary {
+            background: #4a5568;
+            color: var(--text-color);
+        }
+
+        button.secondary:hover {
+            background: #718096;
+        }
+
+        .mode-toggle {
+            display: flex;
+            gap: 5px;
+            background: rgba(0,0,0,0.3);
+            padding: 4px;
+            border-radius: 6px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 6px;
+            background: transparent;
+            color: var(--text-dim);
+            font-size: 0.75rem;
+            border-radius: 4px;
+        }
+
+        .mode-btn.active {
+            background: var(--accent-gold);
+            color: #111;
+        }
+
+        /* Tabuleiro */
+        .board-wrapper {
+            position: relative;
+            background: #120e0b;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 12px 28px rgba(0,0,0,0.6);
+            border: 2px solid rgba(212, 175, 55, 0.4);
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 64px);
+            grid-template-rows: repeat(8, 64px);
+            gap: 2px;
+            background-color: #000;
+            border: 2px solid #333;
+        }
+
+        .square {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+
+        .square.light { background-color: var(--tile-light); color: #333; }
+        .square.dark { background-color: var(--tile-dark); color: #222; }
+
+        /* Territórios Dominados */
+        .square.territory-p1::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-color: var(--p1-bg);
+            border: 2px solid var(--p1-light);
+            pointer-events: none;
+        }
+
+        .square.territory-p2::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-color: var(--p2-bg);
+            border: 2px solid var(--p2-light);
+            pointer-events: none;
+        }
+
+        /* Marcadores de Coordenação */
+        .square .coord {
+            position: absolute;
+            bottom: 2px;
+            right: 4px;
+            font-size: 0.65rem;
+            color: rgba(0,0,0,0.4);
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Peça e Indicadores */
+        .piece {
+            z-index: 2;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.15s ease;
+        }
+
+        .piece.p1 { color: #1a365d; filter: drop-shadow(0 2px 3px rgba(255,255,255,0.6)); }
+        .piece.p2 { color: #742a2a; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8)); }
+
+        .piece-label {
+            position: absolute;
+            top: -2px;
+            font-size: 0.55rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 0 2px;
+            border-radius: 2px;
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            white-space: nowrap;
+        }
+
+        /* Tag de Peça Dominada/Convertida */
+        .converted-tag {
+            position: absolute;
+            bottom: -2px;
+            font-size: 0.5rem;
+            background: #d4af37;
+            color: #000;
+            padding: 0 3px;
+            border-radius: 2px;
+            font-weight: bold;
+        }
+
+        /* Destaques de Seleção e Movimento */
+        .square.selected {
+            outline: 3px solid #f6e05e;
+            outline-offset: -3px;
+            z-index: 3;
+        }
+
+        .square.valid-move::before {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background-color: rgba(72, 187, 120, 0.75);
+            border-radius: 50%;
+            z-index: 3;
+            box-shadow: 0 0 8px rgba(72, 187, 120, 0.9);
+        }
+
+        .square.valid-capture::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border: 3px solid #e53e3e;
+            background-color: rgba(229, 62, 62, 0.25);
+            z-index: 3;
+        }
+
+        .square.valid-convert::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border: 3px solid #d4af37;
+            background-color: rgba(212, 175, 55, 0.3);
+            z-index: 3;
+        }
+
+        /* Registo de Jogadas */
+        .log-box {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 6px;
+            padding: 10px;
+            height: 140px;
+            overflow-y: auto;
+            font-size: 0.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .log-entry {
+            color: var(--text-dim);
+            line-height: 1.3;
+        }
+
+        .log-entry.p1 { color: var(--p1-light); }
+        .log-entry.p2 { color: var(--p2-light); }
+        .log-entry.special { color: var(--accent-gold); font-weight: bold; }
+
+        /* Modal de Regras e Vitória */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal {
+            background: var(--panel-bg);
+            border: 2px solid var(--accent-gold);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+
+        .modal h2 {
+            color: var(--accent-gold);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .modal p, .modal li {
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #e2e8f0;
+            margin-bottom: 10px;
+        }
+
+        .modal ul {
+            padding-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .modal-close {
+            display: block;
+            margin: 20px auto 0;
+            width: 120px;
+        }
+
+        /* Responsividade */
+        @media (max-width: 680px) {
+            .board {
+                grid-template-columns: repeat(8, 42px);
+                grid-template-rows: repeat(8, 42px);
+            }
+            .square { font-size: 1.2rem; }
+            .sidebar { width: 100%; max-width: 352px; }
+            .piece-label { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Império</h1>
+        <p>Conquiste 33 territórios ou elimine o Sinhô e a Sinhá adversários para vencer!</p>
+    </header>
+
+    <div class="main-container">
+        <!-- Tabuleiro -->
+        <div class="board-wrapper">
+            <div id="board" class="board"></div>
+        </div>
+
+        <!-- Painel Lateral -->
+        <div class="sidebar">
+            <div class="status-box">
+                <div class="turn-indicator" id="turnIndicator">
+                    <span class="turn-badge" id="turnBadge" style="background-color: var(--p1-light);"></span>
+                    <span id="turnText">Vez do Jogador 1 (Azul)</span>
+                </div>
+            </div>
+
+            <!-- Progresso dos Territórios -->
+            <div class="territory-tracker">
+                <div class="player-score">
+                    <div class="score-info">
+                        <span style="color: var(--p1-light)">Jogador 1 (Azul)</span>
+                        <span id="p1Score">16 / 64</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div id="p1Bar" class="progress-bar-fill p1-fill" style="width: 25%;"></div>
+                    </div>
+                </div>
+
+                <div class="player-score">
+                    <div class="score-info">
+                        <span style="color: var(--p2-light)">Jogador 2 (Vermelho)</span>
+                        <span id="p2Score">16 / 64</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div id="p2Bar" class="progress-bar-fill p2-fill" style="width: 25%;"></div>
+                    </div>
+                </div>
+                <div class="target-marker">Vitória: 33 territórios OU eliminar Sinhô e Sinhá</div>
+            </div>
+
+            <!-- Seleção de Modo de Jogo -->
+            <div class="mode-toggle">
+                <button class="mode-btn active" id="btnPvp" onclick="setGameMode('pvp')">2 Jogadores</button>
+                <button class="mode-btn" id="btnAi" onclick="setGameMode('ai')">Contra Bot (IA)</button>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="controls">
+                <button onclick="resetGame()">Novo Jogo</button>
+                <button class="secondary" onclick="openRulesModal()">Regras do Jogo</button>
+            </div>
+
+            <!-- Registo de Ações -->
+            <div>
+                <div style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 5px; font-weight: bold;">Histórico de Jogadas:</div>
+                <div class="log-box" id="logBox"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Regras -->
+    <div class="modal-overlay" id="rulesModal">
+        <div class="modal">
+            <h2>Regras do Jogo Império</h2>
+            <p><strong>Condições de Vitória:</strong></p>
+            <ul>
+                <li>Dominar <strong>33 ou mais</strong> dos 64 territórios do tabuleiro.</li>
+                <li><strong>OU</strong> Eliminar <strong>ambos o Sinhô e a Sinhá</strong> do jogador adversário. (Se for eliminado apenas um deles, a partida continua!).</li>
+            </ul>
+            <p><strong>Domínio de Território:</strong> Um território é dominado quando uma peça <em>termina</em> o seu movimento nessa casa. Passar por uma casa não a domina. O território continua a pertencer ao jogador mesmo depois da peça sair dele.</p>
+            <p><strong>Movimentação das Peças:</strong></p>
+            <ul>
+                <li><strong>Escravos (♟):</strong> Movem-se 1 casa em qualquer direção (frente, trás, lados, diagonais).</li>
+                <li><strong>Sinhô (♚) e Sinhá (♛):</strong> Movem-se como o Bispo do xadrez (diagonais, qualquer distância).</li>
+                <li><strong>Indígenas (🏹):</strong> Movem-se como a Rainha do xadrez (todas as direções, qualquer distância).</li>
+                <li><strong>Jesuítas (✝):</strong> Movem-se como a Torre do xadrez (linhas retas ortogonais).</li>
+                <li><strong>Bandeirantes (🐎):</strong> Movem-se como o Cavalo do xadrez (em "L").</li>
+            </ul>
+            <p><strong>Domínio e Recuperação de Peças:</strong></p>
+            <ul>
+                <li><strong>Jesuítas:</strong> Quando alcancem um <em>Escravo</em> ou <em>Indígena</em> adversário, dominam a peça. A peça passa para o novo dono e permanece no jogo!</li>
+                <li><strong>Bandeirantes:</strong> Podem recuperar <em>Escravos</em> ou <em>Indígenas</em> originais da sua equipa que tenham sido dominados pelo adversário.</li>
+                <li><strong>Sinhô, Sinhá, Jesuítas e Bandeirantes:</strong> Não podem mudar de dono, mas são eliminados se uma peça adversária aterrar na sua casa.</li>
+            </ul>
+            <button class="modal-close" onclick="closeRulesModal()">Fechar</button>
+        </div>
+    </div>
+
+    <!-- Modal de Vitória -->
+    <div class="modal-overlay" id="victoryModal">
+        <div class="modal" style="text-align: center;">
+            <h2 id="victoryTitle" style="font-size: 2rem;">Vitória!</h2>
+            <p id="victoryDesc" style="font-size: 1.1rem; margin: 15px 0;"></p>
+            <button class="modal-close" onclick="closeVictoryModal(); resetGame();">JOGAR NOVAMENTE</button>
+        </div>
+    </div>
+
+    <script>
+        // --- ESTADO DO JOGO ---
+        const BOARD_SIZE = 8;
+        let board = []; // Matriz 8x8
+        let currentTurn = 1; // 1: Jogador 1 (Azul/Baixo), 2: Jogador 2 (Vermelho/Cima)
+        let selectedSquare = null;
+        let validMoves = [];
+        let gameMode = 'pvp'; // 'pvp' ou 'ai'
+        let gameOver = false;
+
+        // Configuração das Peças
+        const PIECE_TYPES = {
+            escravo:     { name: "Escravo",     symbol: "♟", convertible: true },
+            indigena:    { name: "Indígena",    symbol: "🏹", convertible: true },
+            sinho:       { name: "Sinhô",       symbol: "♚", convertible: false },
+            sinha:       { name: "Sinhá",       symbol: "♛", convertible: false },
+            jesuita:     { name: "Jesuíta",     symbol: "✝", convertible: false },
+            bandeirante: { name: "Bandeirante", symbol: "🐎", convertible: false }
+        };
+
+        // Som sintetizado (Web Audio API)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(freq, duration = 0.1, type = 'sine') {
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {}
+        }
+
+        // --- INICIALIZAÇÃO ---
+        function initGame() {
+            board = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null));
+            currentTurn = 1;
+            selectedSquare = null;
+            validMoves = [];
+            gameOver = false;
+
+            // Criar casas e territórios iniciais
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    let territoryOwner = 0; // 0: neutro
+                    if (r === 0 || r === 1) territoryOwner = 2; // Início do Jogador 2
+                    if (r === 6 || r === 7) territoryOwner = 1; // Início do Jogador 1
+
+                    board[r][c] = {
+                        r, c,
+                        territory: territoryOwner,
+                        piece: null
+                    };
+                }
+            }
+
+            // Posicionamento Inicial das Peças (Layout de Xadrez)
+            const backRowSetup = ['indigena', 'bandeirante', 'jesuita', 'sinha', 'sinho', 'jesuita', 'bandeirante', 'indigena'];
+
+            // Jogador 2 (Topo - Linhas 0 e 1)
+            for (let c = 0; c < BOARD_SIZE; c++) {
+                board[0][c].piece = createPiece(backRowSetup[c], 2);
+                board[1][c].piece = createPiece('escravo', 2);
+            }
+
+            // Jogador 1 (Base - Linhas 6 e 7)
+            for (let c = 0; c < BOARD_SIZE; c++) {
+                board[6][c].piece = createPiece('escravo', 1);
+                board[7][c].piece = createPiece(backRowSetup[c], 1);
+            }
+
+            document.getElementById('logBox').innerHTML = '';
+            addLog("Partida iniciada! Que vença o melhor império.", "special");
+            renderBoard();
+            updateUI();
+        }
+
+        function createPiece(type, owner) {
+            return {
+                type: type,
+                originalOwner: owner,
+                currentOwner: owner
+            };
+        }
+
+        // --- RENDERIZAÇÃO DO TABULEIRO ---
+        function renderBoard() {
+            const boardEl = document.getElementById('board');
+            boardEl.innerHTML = '';
+
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    const cell = board[r][c];
+                    const squareEl = document.createElement('div');
+                    
+                    const isLight = (r + c) % 2 === 0;
+                    squareEl.className = `square ${isLight ? 'light' : 'dark'}`;
+                    
+                    if (cell.territory === 1) squareEl.classList.add('territory-p1');
+                    if (cell.territory === 2) squareEl.classList.add('territory-p2');
+
+                    // Seleção e Movimentos Válidos
+                    if (selectedSquare && selectedSquare.r === r && selectedSquare.c === c) {
+                        squareEl.classList.add('selected');
+                    }
+
+                    const moveInfo = validMoves.find(m => m.r === r && m.c === c);
+                    if (moveInfo) {
+                        if (moveInfo.action === 'move') squareEl.classList.add('valid-move');
+                        if (moveInfo.action === 'capture') squareEl.classList.add('valid-capture');
+                        if (moveInfo.action === 'convert' || moveInfo.action === 'recover') squareEl.classList.add('valid-convert');
+                    }
+
+                    // Marcador de Coordenada (ex: A1, H8)
+                    const coordSpan = document.createElement('span');
+                    coordSpan.className = 'coord';
+                    coordSpan.textContent = `${String.fromCharCode(65 + c)}${8 - r}`;
+                    squareEl.appendChild(coordSpan);
+
+                    // Peça
+                    if (cell.piece) {
+                        const pieceEl = document.createElement('div');
+                        const p = cell.piece;
+                        pieceEl.className = `piece p${p.currentOwner}`;
+                        pieceEl.innerHTML = `<span>${PIECE_TYPES[p.type].symbol}</span>`;
+
+                        // Etiqueta com nome da peça
+                        const labelEl = document.createElement('span');
+                        labelEl.className = 'piece-label';
+                        labelEl.textContent = PIECE_TYPES[p.type].name;
+                        pieceEl.appendChild(labelEl);
+
+                        // Indicador de Peça Dominada/Convertida
+                        if (p.currentOwner !== p.originalOwner) {
+                            const tagEl = document.createElement('span');
+                            tagEl.className = 'converted-tag';
+                            tagEl.textContent = 'Dominado';
+                            pieceEl.appendChild(tagEl);
+                        }
+
+                        squareEl.appendChild(pieceEl);
+                    }
+
+                    squareEl.onclick = () => handleSquareClick(r, c);
+                    boardEl.appendChild(squareEl);
+                }
+            }
+        }
+
+        // --- INTERAÇÃO DO JOGADOR ---
+        function handleSquareClick(r, c) {
+            if (gameOver) return;
+            if (gameMode === 'ai' && currentTurn === 2) return; // Aguardar vez do Bot
+
+            const clickedCell = board[r][c];
+
+            // Se já houver uma casa selecionada e o clique for num movimento válido
+            if (selectedSquare) {
+                const move = validMoves.find(m => m.r === r && m.c === c);
+                if (move) {
+                    executeMove(selectedSquare.r, selectedSquare.c, r, c, move);
+                    selectedSquare = null;
+                    validMoves = [];
+                    renderBoard();
+                    return;
+                }
+            }
+
+            // Selecionar uma peça própria
+            if (clickedCell.piece && clickedCell.piece.currentOwner === currentTurn) {
+                selectedSquare = { r, c };
+                validMoves = getValidMoves(r, c);
+                playSound(440, 0.05);
+            } else {
+                selectedSquare = null;
+                validMoves = [];
+            }
+
+            renderBoard();
+        }
+
+        // --- CÁLCULO DE MOVIMENTOS VÁLIDOS ---
+        function getValidMoves(r, c) {
+            const cell = board[r][c];
+            if (!cell.piece) return [];
+
+            const piece = cell.piece;
+            const moves = [];
+
+            const addMoveIfValid = (tr, tc) => {
+                if (tr < 0 || tr >= BOARD_SIZE || tc < 0 || tc >= BOARD_SIZE) return false; // Fora do tabuleiro
+                
+                const targetCell = board[tr][tc];
+
+                // Caso a casa destino esteja vazia
+                if (!targetCell.piece) {
+                    moves.push({ r: tr, c: tc, action: 'move' });
+                    return true;
+                }
+
+                // Casa ocupada por peça do PRÓPRIO jogador atual -> Bloqueia caminho
+                if (targetCell.piece.currentOwner === piece.currentOwner) {
+                    return false;
+                }
+
+                // Casa ocupada por peça ADVERSÁRIA:
+                const targetPiece = targetCell.piece;
+
+                // Regra do Jesuíta: Domina Escravo ou Indígena que NÃO pertença originalmente à sua equipe
+                if (
+                piece.type === 'jesuita' && 
+                (targetPiece.type === 'escravo' || targetPiece.type === 'indigena') &&
+                targetPiece.originalOwner !== piece.currentOwner
+                ) {
+                    moves.push({ r: tr, c: tc, action: 'convert' });
+                } 
+                // Regra do Bandeirante: Recupera Escravo ou Indígena original dominado
+                else if (piece.type === 'bandeirante' && (targetPiece.type === 'escravo' || targetPiece.type === 'indigena') && targetPiece.originalOwner === piece.currentOwner) {
+                    moves.push({ r: tr, c: tc, action: 'recover' });
+                } 
+                // Qualquer outra peça/combinação -> Eliminação/Captura
+                else {
+                    moves.push({ r: tr, c: tc, action: 'capture' });
+                }
+
+                return false; // Não pode continuar além de uma peça ocupante
+            };
+
+            // Regras de Movimento por Tipo de Peça
+            if (piece.type === 'escravo') {
+                // Escravo: 1 casa em todas as 8 direções
+                const dirs = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+                dirs.forEach(([dr, dc]) => addMoveIfValid(r + dr, c + dc));
+            } 
+            else if (piece.type === 'sinho' || piece.type === 'sinha') {
+                // Sinhô e Sinhá: Bispo do xadrez (Diagonais)
+                const dirs = [[-1,-1],[-1,1],[1,-1],[1,1]];
+                dirs.forEach(([dr, dc]) => {
+                    let step = 1;
+                    while (addMoveIfValid(r + dr * step, c + dc * step)) step++;
+                });
+            } 
+            else if (piece.type === 'indigena') {
+                // Indígena: Rainha do xadrez (Todas as direções)
+                const dirs = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+                dirs.forEach(([dr, dc]) => {
+                    let step = 1;
+                    while (addMoveIfValid(r + dr * step, c + dc * step)) step++;
+                });
+            } 
+            else if (piece.type === 'jesuita') {
+                // Jesuíta: Torre do xadrez (Linhas ortogonais)
+                const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+                dirs.forEach(([dr, dc]) => {
+                    let step = 1;
+                    while (addMoveIfValid(r + dr * step, c + dc * step)) step++;
+                });
+            } 
+            else if (piece.type === 'bandeirante') {
+                // Bandeirante: Cavalo do xadrez ("L")
+                const jumps = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
+                jumps.forEach(([dr, dc]) => addMoveIfValid(r + dr, c + dc));
+            }
+
+            return moves;
+        }
+
+        // --- EXECUÇÃO DE MOVIMENTO ---
+        function executeMove(fromR, fromC, toR, toC, moveInfo) {
+            const sourceCell = board[fromR][fromC];
+            const targetCell = board[toR][toC];
+
+            const movingPiece = sourceCell.piece;
+            const destPiece = targetCell.piece;
+
+            const playerTag = `P${movingPiece.currentOwner}`;
+            const coordStr = `${String.fromCharCode(65 + toC)}${8 - toR}`;
+
+            sourceCell.piece = null;
+
+            if (moveInfo.action === 'convert') {
+                // O Jesuíta domina a peça adversária!
+                destPiece.currentOwner = movingPiece.currentOwner;
+                // A peça dominada permanece no jogo e é realocada para a casa de onde o Jesuíta saiu
+                sourceCell.piece = destPiece;
+                targetCell.piece = movingPiece;
+
+                playSound(600, 0.2, 'triangle');
+                addLog(`✝ Jesuíta (${playerTag}) dominou um ${PIECE_TYPES[destPiece.type].name} em ${coordStr}!`, `p${movingPiece.currentOwner}`);
+            } 
+            else if (moveInfo.action === 'recover') {
+                // O Bandeirante recupera a peça da sua equipa!
+                destPiece.currentOwner = movingPiece.currentOwner;
+                sourceCell.piece = destPiece;
+                targetCell.piece = movingPiece;
+
+                playSound(650, 0.2, 'triangle');
+                addLog(`🐎 Bandeirante (${playerTag}) recuperou o seu ${PIECE_TYPES[destPiece.type].name} em ${coordStr}!`, `p${movingPiece.currentOwner}`);
+            } 
+            else if (moveInfo.action === 'capture') {
+                // Eliminação normal da peça rival
+                targetCell.piece = movingPiece;
+                playSound(300, 0.15, 'sawtooth');
+                addLog(`${PIECE_TYPES[movingPiece.type].name} (${playerTag}) eliminou ${PIECE_TYPES[destPiece.type].name} rival em ${coordStr}.`, `p${movingPiece.currentOwner}`);
+            } 
+            else {
+                // Movimento simples
+                targetCell.piece = movingPiece;
+                playSound(500, 0.08, 'sine');
+            }
+
+            // Atualização do Território (Apenas quando a peça TERMINA o movimento na casa)
+            targetCell.territory = movingPiece.currentOwner;
+
+            // Verificar Condições de Vitória
+            checkWinCondition();
+
+            if (!gameOver) {
+                // Trocar de Turno
+                currentTurn = currentTurn === 1 ? 2 : 1;
+                updateUI();
+
+                // Se o modo for contra Bot e for a vez do Bot
+                if (gameMode === 'ai' && currentTurn === 2) {
+                    setTimeout(makeAiMove, 600);
+                }
+            }
+        }
+
+        // --- CONDIÇÃO DE VITÓRIA ---
+        function checkWinCondition() {
+            let p1Territories = 0;
+            let p2Territories = 0;
+
+            let p1Sinho = false, p1Sinha = false;
+            let p2Sinho = false, p2Sinha = false;
+
+            // Percorrer o tabuleiro para contar territórios e verificar existência do Sinhô / Sinhá
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    const cell = board[r][c];
+
+                    if (cell.territory === 1) p1Territories++;
+                    if (cell.territory === 2) p2Territories++;
+
+                    if (cell.piece) {
+                        if (cell.piece.type === 'sinho') {
+                            if (cell.piece.currentOwner === 1) p1Sinho = true;
+                            if (cell.piece.currentOwner === 2) p2Sinho = true;
+                        }
+                        if (cell.piece.type === 'sinha') {
+                            if (cell.piece.currentOwner === 1) p1Sinha = true;
+                            if (cell.piece.currentOwner === 2) p2Sinha = true;
+                        }
+                    }
+                }
+            }
+
+            // Vitória por eliminação de ambos o Sinhô e Sinhá do adversário
+            if (!p2Sinho && !p2Sinha) {
+                triggerVictory(1, "Eliminou ambos o Sinhô e a Sinhá do adversário!");
+                return;
+            }
+            if (!p1Sinho && !p1Sinha) {
+                triggerVictory(2, "Eliminou ambos o Sinhô e a Sinhá do adversário!");
+                return;
+            }
+
+            // Vitória por conquista de 33 Territórios
+            if (p1Territories >= 33) {
+                triggerVictory(1, `Dominou ${p1Territories} dos 64 territórios!`);
+            } else if (p2Territories >= 33) {
+                triggerVictory(2, `Dominou ${p2Territories} dos 64 territórios!`);
+            }
+        }
+
+        function triggerVictory(winner, reason) {
+            gameOver = true;
+            playSound(800, 0.4, 'sine');
+            const winnerName = winner === 1 ? "Jogador 1 (Azul)" : (gameMode === 'ai' ? "Bot (IA)" : "Jogador 2 (Vermelho)");
+            
+            document.getElementById('victoryTitle').textContent = `🏆 ${winnerName} Venceu!`;
+            document.getElementById('victoryDesc').textContent = reason;
+            
+            document.getElementById('victoryModal').classList.add('active');
+            addLog(`🏆 PARTIDA TERMINADA! ${winnerName} venceu: ${reason}`, 'special');
+        }
+
+        // --- INTELIGÊNCIA ARTIFICIAL (BOT) ---
+        function makeAiMove() {
+            if (gameOver || currentTurn !== 2) return;
+
+            const allMoves = [];
+
+            // Recolher todos os movimentos válidos para o Jogador 2
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    if (board[r][c].piece && board[r][c].piece.currentOwner === 2) {
+                        const moves = getValidMoves(r, c);
+                        moves.forEach(m => {
+                            allMoves.push({
+                                fromR: r, fromC: c,
+                                toR: m.r, toC: m.c,
+                                info: m,
+                                score: evaluateMove(r, c, m.r, m.c, m)
+                            });
+                        });
+                    }
+                }
+            }
+
+            if (allMoves.length === 0) {
+                addLog("O Bot não tem movimentos disponíveis! Turno passado.", "p2");
+                currentTurn = 1;
+                updateUI();
+                return;
+            }
+
+            // Ordenar movimentos pela melhor pontuação heurística
+            allMoves.sort((a, b) => b.score - a.score);
+
+            // Escolher o melhor movimento (com ligeira aleatoriedade entre os melhores)
+            const bestScore = allMoves[0].score;
+            const topMoves = allMoves.filter(m => m.score >= bestScore - 5);
+            const chosenMove = topMoves[Math.floor(Math.random() * topMoves.length)];
+
+            executeMove(chosenMove.fromR, chosenMove.fromC, chosenMove.toR, chosenMove.toC, chosenMove.info);
+            renderBoard();
+        }
+
+        // Avaliação heurística das jogadas do Bot
+        function evaluateMove(fromR, fromC, toR, toC, moveInfo) {
+            let score = 0;
+            const targetCell = board[toR][toC];
+
+            // Prioridade Extrema: Eliminar Sinhô/Sinhá adversário se possível
+            if (moveInfo.action === 'capture' && targetCell.piece) {
+                const type = targetCell.piece.type;
+                if (type === 'sinha' || type === 'sinho') score += 100;
+                else if (type === 'indigena' || type === 'jesuita') score += 30;
+                else if (type === 'bandeirante') score += 25;
+                else score += 15;
+            }
+
+            // Prioridade: Domínio de Território Novo/Inimigo
+            if (targetCell.territory === 0) score += 15; // Território neutro
+            if (targetCell.territory === 1) score += 25; // Roubar território do rival
+
+            // Prioridade: Dominação / Conversão por Jesuíta
+            if (moveInfo.action === 'convert') score += 50;
+
+            // Prioridade: Recuperação por Bandeirante
+            if (moveInfo.action === 'recover') score += 45;
+
+            // Pequeno incentivo à centralização
+            const distFromCenter = Math.abs(toR - 3.5) + Math.abs(toC - 3.5);
+            score += (10 - distFromCenter);
+
+            return score;
+        }
+
+        // --- ATUALIZAÇÃO DA INTERFACE ---
+        function updateUI() {
+            // Contagem de Territórios
+            let p1Territories = 0;
+            let p2Territories = 0;
+
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    if (board[r][c].territory === 1) p1Territories++;
+                    if (board[r][c].territory === 2) p2Territories++;
+                }
+            }
+
+            document.getElementById('p1Score').textContent = `${p1Territories} / 64`;
+            document.getElementById('p2Score').textContent = `${p2Territories} / 64`;
+
+            document.getElementById('p1Bar').style.width = `${(p1Territories / 33) * 100}%`;
+            document.getElementById('p2Bar').style.width = `${(p2Territories / 33) * 100}%`;
+
+            // Indicador do Turno
+            const badge = document.getElementById('turnBadge');
+            const turnText = document.getElementById('turnText');
+
+            if (currentTurn === 1) {
+                badge.style.backgroundColor = 'var(--p1-light)';
+                turnText.textContent = "Vez do Jogador 1 (Azul)";
+            } else {
+                badge.style.backgroundColor = 'var(--p2-light)';
+                turnText.textContent = gameMode === 'ai' ? "Vez do Bot (IA)..." : "Vez do Jogador 2 (Vermelho)";
+            }
+        }
+
+        function addLog(text, styleClass = '') {
+            const logBox = document.getElementById('logBox');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${styleClass}`;
+            entry.textContent = text;
+            logBox.appendChild(entry);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        function setGameMode(mode) {
+            gameMode = mode;
+            document.getElementById('btnPvp').classList.toggle('active', mode === 'pvp');
+            document.getElementById('btnAi').classList.toggle('active', mode === 'ai');
+            resetGame();
+        }
+
+        function resetGame() {
+            initGame();
+        }
+
+        function openRulesModal() {
+            document.getElementById('rulesModal').classList.add('active');
+        }
+
+        function closeRulesModal() {
+            document.getElementById('rulesModal').classList.remove('active');
+        }
+
+        function closeVictoryModal() {
+            document.getElementById('victoryModal').classList.remove('active');
+        }
+
+        // Iniciar jogo ao carregar a página
+        window.onload = () => {
+            initGame();
+        };
+    </script>
+</body>
+</html>
