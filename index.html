@@ -674,15 +674,38 @@
                 return;
             }
 
+            document.getElementById('onlineStatus').textContent = "A conectar à sala...";
+
+            // Função para iniciar a conexão
+            const connectToPeer = () => {
+                conn = peer.connect(targetId);
+                myPlayerId = 2; // Quem se conecta é o Jogador 2
+                
+                conn.on('open', () => {
+                    setupConnectionListeners();
+                });
+
+                conn.on('error', (err) => {
+                    alert("Erro ao conectar à sala: " + err);
+                    document.getElementById('onlineStatus').textContent = "Erro de conexão.";
+                });
+            };
+
+            // Se o peer ainda não existe, cria um novo
             if (!peer) {
                 peer = new Peer();
+                peer.on('open', () => {
+                    connectToPeer();
+                });
+            } else if (peer.open) {
+                // Se o peer já estiver aberto, conecta diretamente
+                connectToPeer();
+            } else {
+                // Se o peer já foi instanciado mas ainda não abriu
+                peer.on('open', () => {
+                    connectToPeer();
+                });
             }
-
-            peer.on('open', () => {
-                conn = peer.connect(targetId);
-                myPlayerId = 2; // Quem se coneta é o Jogador 2
-                setupConnectionListeners();
-            });
         }
 
         function setupConnectionListeners() {
