@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jogo Império</title>
+    <title>Jogo Império - Multiplayer</title>
     <link rel="icon" href="favicon.png" type="image/png">
+    <!-- PeerJS para conetividade Multiplayer WebRTC -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         :root {
             --bg-color: #1a1612;
@@ -70,7 +72,7 @@
             flex-wrap: wrap;
         }
 
-        /* Placar e Controlos */
+        /* Sidebar */
         .sidebar {
             background-color: var(--panel-bg);
             border: 1px solid rgba(212, 175, 55, 0.3);
@@ -79,21 +81,20 @@
             width: 320px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 15px;
             box-shadow: 0 8px 16px rgba(0,0,0,0.4);
         }
 
         .status-box {
             background: rgba(0,0,0,0.3);
-            padding: 15px;
+            padding: 12px;
             border-radius: 8px;
             text-align: center;
         }
 
         .turn-indicator {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: bold;
-            margin-bottom: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -105,6 +106,39 @@
             height: 16px;
             border-radius: 50%;
             display: inline-block;
+        }
+
+        /* Painel Online */
+        .online-panel {
+            background: rgba(0,0,0,0.25);
+            border: 1px dashed var(--accent-gold);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+
+        .online-panel input {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #4a5568;
+            background: #111;
+            color: #fff;
+            width: 100%;
+            font-size: 0.85rem;
+        }
+
+        .room-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .room-actions button {
+            flex: 1;
+            font-size: 0.75rem;
+            padding: 8px 4px;
         }
 
         /* Progresso do Território */
@@ -155,7 +189,7 @@
         .controls {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
 
         button {
@@ -188,7 +222,7 @@
 
         .mode-toggle {
             display: flex;
-            gap: 5px;
+            gap: 4px;
             background: rgba(0,0,0,0.3);
             padding: 4px;
             border-radius: 6px;
@@ -196,10 +230,10 @@
 
         .mode-btn {
             flex: 1;
-            padding: 6px;
+            padding: 6px 2px;
             background: transparent;
             color: var(--text-dim);
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             border-radius: 4px;
         }
 
@@ -259,7 +293,6 @@
             pointer-events: none;
         }
 
-        /* Marcadores de Coordenação */
         .square .coord {
             position: absolute;
             bottom: 2px;
@@ -271,7 +304,7 @@
             z-index: 1;
         }
 
-        /* Peça e Indicadores */
+        /* Peça */
         .piece {
             z-index: 2;
             position: relative;
@@ -298,7 +331,6 @@
             white-space: nowrap;
         }
 
-        /* Tag de Peça Dominada/Convertida */
         .converted-tag {
             position: absolute;
             bottom: -2px;
@@ -310,7 +342,7 @@
             font-weight: bold;
         }
 
-        /* Destaques de Seleção e Movimento */
+        /* Destaques */
         .square.selected {
             outline: 3px solid #f6e05e;
             outline-offset: -3px;
@@ -352,7 +384,7 @@
             border: 1px solid rgba(255,255,255,0.08);
             border-radius: 6px;
             padding: 10px;
-            height: 140px;
+            height: 120px;
             overflow-y: auto;
             font-size: 0.8rem;
             display: flex;
@@ -360,16 +392,12 @@
             gap: 4px;
         }
 
-        .log-entry {
-            color: var(--text-dim);
-            line-height: 1.3;
-        }
-
+        .log-entry { color: var(--text-dim); line-height: 1.3; }
         .log-entry.p1 { color: var(--p1-light); }
         .log-entry.p2 { color: var(--p2-light); }
         .log-entry.special { color: var(--accent-gold); font-weight: bold; }
 
-        /* Modal de Regras e Vitória */
+        /* Modais */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -383,10 +411,7 @@
             transition: opacity 0.3s;
         }
 
-        .modal-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
 
         .modal {
             background: var(--panel-bg);
@@ -400,36 +425,13 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
 
-        .modal h2 {
-            color: var(--accent-gold);
-            margin-bottom: 15px;
-            text-align: center;
-        }
+        .modal h2 { color: var(--accent-gold); margin-bottom: 15px; text-align: center; }
+        .modal p, .modal li { font-size: 0.9rem; line-height: 1.5; color: #e2e8f0; margin-bottom: 10px; }
+        .modal ul { padding-left: 20px; margin-bottom: 15px; }
+        .modal-close { display: block; margin: 20px auto 0; width: 120px; }
 
-        .modal p, .modal li {
-            font-size: 0.9rem;
-            line-height: 1.5;
-            color: #e2e8f0;
-            margin-bottom: 10px;
-        }
-
-        .modal ul {
-            padding-left: 20px;
-            margin-bottom: 15px;
-        }
-
-        .modal-close {
-            display: block;
-            margin: 20px auto 0;
-            width: 120px;
-        }
-
-        /* Responsividade */
         @media (max-width: 680px) {
-            .board {
-                grid-template-columns: repeat(8, 42px);
-                grid-template-rows: repeat(8, 42px);
-            }
+            .board { grid-template-columns: repeat(8, 42px); grid-template-rows: repeat(8, 42px); }
             .square { font-size: 1.2rem; }
             .sidebar { width: 100%; max-width: 352px; }
             .piece-label { display: none; }
@@ -458,6 +460,28 @@
                 </div>
             </div>
 
+            <!-- Seleção de Modo de Jogo -->
+            <div class="mode-toggle">
+                <button class="mode-btn active" id="btnPvp" onclick="setGameMode('pvp')">Local (2P)</button>
+                <button class="mode-btn" id="btnOnline" onclick="setGameMode('online')">Online (WebRTC)</button>
+                <button class="mode-btn" id="btnAi" onclick="setGameMode('ai')">Contra Bot</button>
+            </div>
+
+            <!-- Painel de Controlo Multiplayer (Online) -->
+            <div class="online-panel" id="onlinePanel" style="display: none;">
+                <div style="font-weight: bold; color: var(--accent-gold);">Conexão Multiplayer</div>
+                <div id="onlineStatus">Desconectado. Crie ou entre numa sala.</div>
+                
+                <div class="room-actions">
+                    <button onclick="createOnlineRoom()">Criar Sala</button>
+                </div>
+
+                <div style="display: flex; gap: 4px; margin-top: 4px;">
+                    <input type="text" id="joinRoomId" placeholder="Código da sala...">
+                    <button onclick="joinOnlineRoom()" style="width: auto; padding: 0 10px;">Entrar</button>
+                </div>
+            </div>
+
             <!-- Progresso dos Territórios -->
             <div class="territory-tracker">
                 <div class="player-score">
@@ -482,12 +506,6 @@
                 <div class="target-marker">Vitória: 33 territórios OU eliminar Sinhô e Sinhá</div>
             </div>
 
-            <!-- Seleção de Modo de Jogo -->
-            <div class="mode-toggle">
-                <button class="mode-btn active" id="btnPvp" onclick="setGameMode('pvp')">2 Jogadores</button>
-                <button class="mode-btn" id="btnAi" onclick="setGameMode('ai')">Contra Bot (IA)</button>
-            </div>
-
             <!-- Botões de Ação -->
             <div class="controls">
                 <button onclick="resetGame()">Novo Jogo</button>
@@ -509,22 +527,16 @@
             <p><strong>Condições de Vitória:</strong></p>
             <ul>
                 <li>Dominar <strong>33 ou mais</strong> dos 64 territórios do tabuleiro.</li>
-                <li><strong>OU</strong> Eliminar <strong>ambos o Sinhô e a Sinhá</strong> do jogador adversário. (Se for eliminado apenas um deles, a partida continua!).</li>
+                <li><strong>OU</strong> Eliminar <strong>ambos o Sinhô e a Sinhá</strong> do jogador adversário.</li>
             </ul>
-            <p><strong>Domínio de Território:</strong> Um território é dominado quando uma peça <em>termina</em> o seu movimento nessa casa. Passar por uma casa não a domina. O território continua a pertencer ao jogador mesmo depois da peça sair dele.</p>
+            <p><strong>Domínio de Território:</strong> Um território é dominado quando uma peça <em>termina</em> o seu movimento nessa casa.</p>
             <p><strong>Movimentação das Peças:</strong></p>
             <ul>
-                <li><strong>Escravos (♟):</strong> Movem-se 1 casa em qualquer direção (frente, trás, lados, diagonais).</li>
-                <li><strong>Sinhô (♚) e Sinhá (♛):</strong> Movem-se como o Bispo do xadrez (diagonais, qualquer distância).</li>
-                <li><strong>Indígenas (🏹):</strong> Movem-se como a Rainha do xadrez (todas as direções, qualquer distância).</li>
-                <li><strong>Jesuítas (✝):</strong> Movem-se como a Torre do xadrez (linhas retas ortogonais).</li>
+                <li><strong>Escravos (♟):</strong> Movem-se 1 casa em qualquer direção.</li>
+                <li><strong>Sinhô (♚) e Sinhá (♛):</strong> Movem-se como o Bispo do xadrez (diagonais).</li>
+                <li><strong>Indígenas (🏹):</strong> Movem-se como a Rainha do xadrez (todas as direções).</li>
+                <li><strong>Jesuítas (✝):</strong> Movem-se como a Torre do xadrez (linhas retas).</li>
                 <li><strong>Bandeirantes (🐎):</strong> Movem-se como o Cavalo do xadrez (em "L").</li>
-            </ul>
-            <p><strong>Domínio e Recuperação de Peças:</strong></p>
-            <ul>
-                <li><strong>Jesuítas:</strong> Quando alcancem um <em>Escravo</em> ou <em>Indígena</em> adversário, dominam a peça. A peça passa para o novo dono e permanece no jogo!</li>
-                <li><strong>Bandeirantes:</strong> Podem recuperar <em>Escravos</em> ou <em>Indígenas</em> originais da sua equipa que tenham sido dominados pelo adversário.</li>
-                <li><strong>Sinhô, Sinhá, Jesuítas e Bandeirantes:</strong> Não podem mudar de dono, mas são eliminados se uma peça adversária aterrar na sua casa.</li>
             </ul>
             <button class="modal-close" onclick="closeRulesModal()">Fechar</button>
         </div>
@@ -542,12 +554,17 @@
     <script>
         // --- ESTADO DO JOGO ---
         const BOARD_SIZE = 8;
-        let board = []; // Matriz 8x8
-        let currentTurn = 1; // 1: Jogador 1 (Azul/Baixo), 2: Jogador 2 (Vermelho/Cima)
+        let board = []; 
+        let currentTurn = 1; 
         let selectedSquare = null;
         let validMoves = [];
-        let gameMode = 'pvp'; // 'pvp' ou 'ai'
+        let gameMode = 'pvp'; // 'pvp', 'ai' ou 'online'
         let gameOver = false;
+
+        // --- VARIÁVEIS MULTIPLAYER (PeerJS) ---
+        let peer = null;
+        let conn = null;
+        let myPlayerId = 1; // Host = 1, Client = 2
 
         // Configuração das Peças
         const PIECE_TYPES = {
@@ -577,7 +594,7 @@
             } catch (e) {}
         }
 
-        // --- INICIALIZAÇÃO ---
+        // --- INICIALIZAÇÃO DO JOGO ---
         function initGame() {
             board = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null));
             currentTurn = 1;
@@ -585,31 +602,23 @@
             validMoves = [];
             gameOver = false;
 
-            // Criar casas e territórios iniciais
             for (let r = 0; r < BOARD_SIZE; r++) {
                 for (let c = 0; c < BOARD_SIZE; c++) {
-                    let territoryOwner = 0; // 0: neutro
-                    if (r === 0 || r === 1) territoryOwner = 2; // Início do Jogador 2
-                    if (r === 6 || r === 7) territoryOwner = 1; // Início do Jogador 1
+                    let territoryOwner = 0;
+                    if (r === 0 || r === 1) territoryOwner = 2;
+                    if (r === 6 || r === 7) territoryOwner = 1;
 
-                    board[r][c] = {
-                        r, c,
-                        territory: territoryOwner,
-                        piece: null
-                    };
+                    board[r][c] = { r, c, territory: territoryOwner, piece: null };
                 }
             }
 
-            // Posicionamento Inicial das Peças (Layout de Xadrez)
             const backRowSetup = ['indigena', 'bandeirante', 'jesuita', 'sinha', 'sinho', 'jesuita', 'bandeirante', 'indigena'];
 
-            // Jogador 2 (Topo - Linhas 0 e 1)
             for (let c = 0; c < BOARD_SIZE; c++) {
                 board[0][c].piece = createPiece(backRowSetup[c], 2);
                 board[1][c].piece = createPiece('escravo', 2);
             }
 
-            // Jogador 1 (Base - Linhas 6 e 7)
             for (let c = 0; c < BOARD_SIZE; c++) {
                 board[6][c].piece = createPiece('escravo', 1);
                 board[7][c].piece = createPiece(backRowSetup[c], 1);
@@ -622,11 +631,90 @@
         }
 
         function createPiece(type, owner) {
-            return {
-                type: type,
-                originalOwner: owner,
-                currentOwner: owner
-            };
+            return { type, originalOwner: owner, currentOwner: owner };
+        }
+
+        // --- LÓGICA MULTIPLAYER (WebRTC / PeerJS) ---
+        function setupPeer() {
+            if (peer) return;
+            
+            // Cria um ID aleatório simples para a sala
+            const randomId = Math.floor(100000 + Math.random() * 900000).toString();
+            peer = new Peer(randomId);
+
+            peer.on('open', (id) => {
+                document.getElementById('onlineStatus').textContent = `Servidor pronto. O seu ID é: ${id}`;
+            });
+
+            peer.on('connection', (connection) => {
+                conn = connection;
+                myPlayerId = 1; // Quem recebe a conexão é o Jogador 1 (Host)
+                setupConnectionListeners();
+                document.getElementById('onlineStatus').textContent = "Jogador 2 conetado! Jogo iniciado.";
+                addLog("O Jogador 2 juntou-se à partida online!", "special");
+                resetGame();
+            });
+
+            peer.on('error', (err) => {
+                alert("Erro na conexão PeerJS: " + err.type);
+            });
+        }
+
+        function createOnlineRoom() {
+            setupPeer();
+            if (peer && peer.id) {
+                prompt("Copie e envie este código para o seu amigo:", peer.id);
+            }
+        }
+
+        function joinOnlineRoom() {
+            const targetId = document.getElementById('joinRoomId').value.trim();
+            if (!targetId) {
+                alert("Por favor, insira o código da sala.");
+                return;
+            }
+
+            if (!peer) {
+                peer = new Peer();
+            }
+
+            peer.on('open', () => {
+                conn = peer.connect(targetId);
+                myPlayerId = 2; // Quem se coneta é o Jogador 2
+                setupConnectionListeners();
+            });
+        }
+
+        function setupConnectionListeners() {
+            conn.on('open', () => {
+                document.getElementById('onlineStatus').textContent = `Conetado à sala! Jogas como Jogador ${myPlayerId}.`;
+                addLog(`Conetado com sucesso! É o Jogador ${myPlayerId}.`, "special");
+                resetGame();
+            });
+
+            conn.on('data', (data) => {
+                if (data.type === 'move') {
+                    // Executa a jogada vinda do adversário via rede
+                    executeMove(data.fromR, data.fromC, data.toR, data.toC, data.moveInfo, false);
+                    renderBoard();
+                } else if (data.type === 'reset') {
+                    initGame();
+                }
+            });
+
+            conn.on('close', () => {
+                document.getElementById('onlineStatus').textContent = "O adversário desconectou-se.";
+                addLog("A conexão com o outro jogador foi perdida.", "special");
+            });
+        }
+
+        function sendMoveToPeer(fromR, fromC, toR, toC, moveInfo) {
+            if (gameMode === 'online' && conn && conn.open) {
+                conn.send({
+                    type: 'move',
+                    fromR, fromC, toR, toC, moveInfo
+                });
+            }
         }
 
         // --- RENDERIZAÇÃO DO TABULEIRO ---
@@ -645,7 +733,6 @@
                     if (cell.territory === 1) squareEl.classList.add('territory-p1');
                     if (cell.territory === 2) squareEl.classList.add('territory-p2');
 
-                    // Seleção e Movimentos Válidos
                     if (selectedSquare && selectedSquare.r === r && selectedSquare.c === c) {
                         squareEl.classList.add('selected');
                     }
@@ -657,26 +744,22 @@
                         if (moveInfo.action === 'convert' || moveInfo.action === 'recover') squareEl.classList.add('valid-convert');
                     }
 
-                    // Marcador de Coordenada (ex: A1, H8)
                     const coordSpan = document.createElement('span');
                     coordSpan.className = 'coord';
                     coordSpan.textContent = `${String.fromCharCode(65 + c)}${8 - r}`;
                     squareEl.appendChild(coordSpan);
 
-                    // Peça
                     if (cell.piece) {
                         const pieceEl = document.createElement('div');
                         const p = cell.piece;
                         pieceEl.className = `piece p${p.currentOwner}`;
                         pieceEl.innerHTML = `<span>${PIECE_TYPES[p.type].symbol}</span>`;
 
-                        // Etiqueta com nome da peça
                         const labelEl = document.createElement('span');
                         labelEl.className = 'piece-label';
                         labelEl.textContent = PIECE_TYPES[p.type].name;
                         pieceEl.appendChild(labelEl);
 
-                        // Indicador de Peça Dominada/Convertida
                         if (p.currentOwner !== p.originalOwner) {
                             const tagEl = document.createElement('span');
                             tagEl.className = 'converted-tag';
@@ -696,15 +779,17 @@
         // --- INTERAÇÃO DO JOGADOR ---
         function handleSquareClick(r, c) {
             if (gameOver) return;
-            if (gameMode === 'ai' && currentTurn === 2) return; // Aguardar vez do Bot
+
+            // Restrições de turno
+            if (gameMode === 'ai' && currentTurn === 2) return;
+            if (gameMode === 'online' && currentTurn !== myPlayerId) return;
 
             const clickedCell = board[r][c];
 
-            // Se já houver uma casa selecionada e o clique for num movimento válido
             if (selectedSquare) {
                 const move = validMoves.find(m => m.r === r && m.c === c);
                 if (move) {
-                    executeMove(selectedSquare.r, selectedSquare.c, r, c, move);
+                    executeMove(selectedSquare.r, selectedSquare.c, r, c, move, true);
                     selectedSquare = null;
                     validMoves = [];
                     renderBoard();
@@ -712,7 +797,6 @@
                 }
             }
 
-            // Selecionar uma peça própria
             if (clickedCell.piece && clickedCell.piece.currentOwner === currentTurn) {
                 selectedSquare = { r, c };
                 validMoves = getValidMoves(r, c);
@@ -734,52 +818,39 @@
             const moves = [];
 
             const addMoveIfValid = (tr, tc) => {
-                if (tr < 0 || tr >= BOARD_SIZE || tc < 0 || tc >= BOARD_SIZE) return false; // Fora do tabuleiro
+                if (tr < 0 || tr >= BOARD_SIZE || tc < 0 || tc >= BOARD_SIZE) return false;
                 
                 const targetCell = board[tr][tc];
 
-                // Caso a casa destino esteja vazia
                 if (!targetCell.piece) {
                     moves.push({ r: tr, c: tc, action: 'move' });
                     return true;
                 }
 
-                // Casa ocupada por peça do PRÓPRIO jogador atual -> Bloqueia caminho
                 if (targetCell.piece.currentOwner === piece.currentOwner) {
                     return false;
                 }
 
-                // Casa ocupada por peça ADVERSÁRIA:
                 const targetPiece = targetCell.piece;
 
-                // Regra do Jesuíta: Domina Escravo ou Indígena que NÃO pertença originalmente à sua equipe
-                if (
-                piece.type === 'jesuita' && 
-                (targetPiece.type === 'escravo' || targetPiece.type === 'indigena') &&
-                targetPiece.originalOwner !== piece.currentOwner
-                ) {
+                if (piece.type === 'jesuita' && (targetPiece.type === 'escravo' || targetPiece.type === 'indigena') && targetPiece.originalOwner !== piece.currentOwner) {
                     moves.push({ r: tr, c: tc, action: 'convert' });
                 } 
-                // Regra do Bandeirante: Recupera Escravo ou Indígena original dominado
                 else if (piece.type === 'bandeirante' && (targetPiece.type === 'escravo' || targetPiece.type === 'indigena') && targetPiece.originalOwner === piece.currentOwner) {
                     moves.push({ r: tr, c: tc, action: 'recover' });
                 } 
-                // Qualquer outra peça/combinação -> Eliminação/Captura
                 else {
                     moves.push({ r: tr, c: tc, action: 'capture' });
                 }
 
-                return false; // Não pode continuar além de uma peça ocupante
+                return false;
             };
 
-            // Regras de Movimento por Tipo de Peça
             if (piece.type === 'escravo') {
-                // Escravo: 1 casa em todas as 8 direções
                 const dirs = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
                 dirs.forEach(([dr, dc]) => addMoveIfValid(r + dr, c + dc));
             } 
             else if (piece.type === 'sinho' || piece.type === 'sinha') {
-                // Sinhô e Sinhá: Bispo do xadrez (Diagonais)
                 const dirs = [[-1,-1],[-1,1],[1,-1],[1,1]];
                 dirs.forEach(([dr, dc]) => {
                     let step = 1;
@@ -787,7 +858,6 @@
                 });
             } 
             else if (piece.type === 'indigena') {
-                // Indígena: Rainha do xadrez (Todas as direções)
                 const dirs = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
                 dirs.forEach(([dr, dc]) => {
                     let step = 1;
@@ -795,7 +865,6 @@
                 });
             } 
             else if (piece.type === 'jesuita') {
-                // Jesuíta: Torre do xadrez (Linhas ortogonais)
                 const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
                 dirs.forEach(([dr, dc]) => {
                     let step = 1;
@@ -803,7 +872,6 @@
                 });
             } 
             else if (piece.type === 'bandeirante') {
-                // Bandeirante: Cavalo do xadrez ("L")
                 const jumps = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
                 jumps.forEach(([dr, dc]) => addMoveIfValid(r + dr, c + dc));
             }
@@ -812,7 +880,7 @@
         }
 
         // --- EXECUÇÃO DE MOVIMENTO ---
-        function executeMove(fromR, fromC, toR, toC, moveInfo) {
+        function executeMove(fromR, fromC, toR, toC, moveInfo, isLocalAction = true) {
             const sourceCell = board[fromR][fromC];
             const targetCell = board[toR][toC];
 
@@ -825,9 +893,7 @@
             sourceCell.piece = null;
 
             if (moveInfo.action === 'convert') {
-                // O Jesuíta domina a peça adversária!
                 destPiece.currentOwner = movingPiece.currentOwner;
-                // A peça dominada permanece no jogo e é realocada para a casa de onde o Jesuíta saiu
                 sourceCell.piece = destPiece;
                 targetCell.piece = movingPiece;
 
@@ -835,7 +901,6 @@
                 addLog(`✝ Jesuíta (${playerTag}) dominou um ${PIECE_TYPES[destPiece.type].name} em ${coordStr}!`, `p${movingPiece.currentOwner}`);
             } 
             else if (moveInfo.action === 'recover') {
-                // O Bandeirante recupera a peça da sua equipa!
                 destPiece.currentOwner = movingPiece.currentOwner;
                 sourceCell.piece = destPiece;
                 targetCell.piece = movingPiece;
@@ -844,29 +909,28 @@
                 addLog(`🐎 Bandeirante (${playerTag}) recuperou o seu ${PIECE_TYPES[destPiece.type].name} em ${coordStr}!`, `p${movingPiece.currentOwner}`);
             } 
             else if (moveInfo.action === 'capture') {
-                // Eliminação normal da peça rival
                 targetCell.piece = movingPiece;
                 playSound(300, 0.15, 'sawtooth');
                 addLog(`${PIECE_TYPES[movingPiece.type].name} (${playerTag}) eliminou ${PIECE_TYPES[destPiece.type].name} rival em ${coordStr}.`, `p${movingPiece.currentOwner}`);
             } 
             else {
-                // Movimento simples
                 targetCell.piece = movingPiece;
                 playSound(500, 0.08, 'sine');
             }
 
-            // Atualização do Território (Apenas quando a peça TERMINA o movimento na casa)
             targetCell.territory = movingPiece.currentOwner;
 
-            // Verificar Condições de Vitória
+            // Transmitir jogada ao outro jogador se for uma ação local no modo online
+            if (isLocalAction && gameMode === 'online') {
+                sendMoveToPeer(fromR, fromC, toR, toC, moveInfo);
+            }
+
             checkWinCondition();
 
             if (!gameOver) {
-                // Trocar de Turno
                 currentTurn = currentTurn === 1 ? 2 : 1;
                 updateUI();
 
-                // Se o modo for contra Bot e for a vez do Bot
                 if (gameMode === 'ai' && currentTurn === 2) {
                     setTimeout(makeAiMove, 600);
                 }
@@ -875,13 +939,10 @@
 
         // --- CONDIÇÃO DE VITÓRIA ---
         function checkWinCondition() {
-            let p1Territories = 0;
-            let p2Territories = 0;
-
+            let p1Territories = 0, p2Territories = 0;
             let p1Sinho = false, p1Sinha = false;
             let p2Sinho = false, p2Sinha = false;
 
-            // Percorrer o tabuleiro para contar territórios e verificar existência do Sinhô / Sinhá
             for (let r = 0; r < BOARD_SIZE; r++) {
                 for (let c = 0; c < BOARD_SIZE; c++) {
                     const cell = board[r][c];
@@ -902,7 +963,6 @@
                 }
             }
 
-            // Vitória por eliminação de ambos o Sinhô e Sinhá do adversário
             if (!p2Sinho && !p2Sinha) {
                 triggerVictory(1, "Eliminou ambos o Sinhô e a Sinhá do adversário!");
                 return;
@@ -912,7 +972,6 @@
                 return;
             }
 
-            // Vitória por conquista de 33 Territórios
             if (p1Territories >= 33) {
                 triggerVictory(1, `Dominou ${p1Territories} dos 64 territórios!`);
             } else if (p2Territories >= 33) {
@@ -932,13 +991,12 @@
             addLog(`🏆 PARTIDA TERMINADA! ${winnerName} venceu: ${reason}`, 'special');
         }
 
-        // --- INTELIGÊNCIA ARTIFICIAL (BOT) ---
+        // --- BOT (IA) ---
         function makeAiMove() {
             if (gameOver || currentTurn !== 2) return;
 
             const allMoves = [];
 
-            // Recolher todos os movimentos válidos para o Jogador 2
             for (let r = 0; r < BOARD_SIZE; r++) {
                 for (let c = 0; c < BOARD_SIZE; c++) {
                     if (board[r][c].piece && board[r][c].piece.currentOwner === 2) {
@@ -962,24 +1020,19 @@
                 return;
             }
 
-            // Ordenar movimentos pela melhor pontuação heurística
             allMoves.sort((a, b) => b.score - a.score);
-
-            // Escolher o melhor movimento (com ligeira aleatoriedade entre os melhores)
             const bestScore = allMoves[0].score;
             const topMoves = allMoves.filter(m => m.score >= bestScore - 5);
             const chosenMove = topMoves[Math.floor(Math.random() * topMoves.length)];
 
-            executeMove(chosenMove.fromR, chosenMove.fromC, chosenMove.toR, chosenMove.toC, chosenMove.info);
+            executeMove(chosenMove.fromR, chosenMove.fromC, chosenMove.toR, chosenMove.toC, chosenMove.info, true);
             renderBoard();
         }
 
-        // Avaliação heurística das jogadas do Bot
         function evaluateMove(fromR, fromC, toR, toC, moveInfo) {
             let score = 0;
             const targetCell = board[toR][toC];
 
-            // Prioridade Extrema: Eliminar Sinhô/Sinhá adversário se possível
             if (moveInfo.action === 'capture' && targetCell.piece) {
                 const type = targetCell.piece.type;
                 if (type === 'sinha' || type === 'sinho') score += 100;
@@ -988,17 +1041,12 @@
                 else score += 15;
             }
 
-            // Prioridade: Domínio de Território Novo/Inimigo
-            if (targetCell.territory === 0) score += 15; // Território neutro
-            if (targetCell.territory === 1) score += 25; // Roubar território do rival
+            if (targetCell.territory === 0) score += 15;
+            if (targetCell.territory === 1) score += 25;
 
-            // Prioridade: Dominação / Conversão por Jesuíta
             if (moveInfo.action === 'convert') score += 50;
-
-            // Prioridade: Recuperação por Bandeirante
             if (moveInfo.action === 'recover') score += 45;
 
-            // Pequeno incentivo à centralização
             const distFromCenter = Math.abs(toR - 3.5) + Math.abs(toC - 3.5);
             score += (10 - distFromCenter);
 
@@ -1007,9 +1055,7 @@
 
         // --- ATUALIZAÇÃO DA INTERFACE ---
         function updateUI() {
-            // Contagem de Territórios
-            let p1Territories = 0;
-            let p2Territories = 0;
+            let p1Territories = 0, p2Territories = 0;
 
             for (let r = 0; r < BOARD_SIZE; r++) {
                 for (let c = 0; c < BOARD_SIZE; c++) {
@@ -1024,16 +1070,21 @@
             document.getElementById('p1Bar').style.width = `${(p1Territories / 33) * 100}%`;
             document.getElementById('p2Bar').style.width = `${(p2Territories / 33) * 100}%`;
 
-            // Indicador do Turno
             const badge = document.getElementById('turnBadge');
             const turnText = document.getElementById('turnText');
 
             if (currentTurn === 1) {
                 badge.style.backgroundColor = 'var(--p1-light)';
-                turnText.textContent = "Vez do Jogador 1 (Azul)";
+                turnText.textContent = gameMode === 'online' && myPlayerId === 2 ? "Vez do Adversário (Azul)" : "Vez do Jogador 1 (Azul)";
             } else {
                 badge.style.backgroundColor = 'var(--p2-light)';
-                turnText.textContent = gameMode === 'ai' ? "Vez do Bot (IA)..." : "Vez do Jogador 2 (Vermelho)";
+                if (gameMode === 'ai') {
+                    turnText.textContent = "Vez do Bot (IA)...";
+                } else if (gameMode === 'online' && myPlayerId === 1) {
+                    turnText.textContent = "Vez do Adversário (Vermelho)";
+                } else {
+                    turnText.textContent = "Vez do Jogador 2 (Vermelho)";
+                }
             }
         }
 
@@ -1049,30 +1100,30 @@
         function setGameMode(mode) {
             gameMode = mode;
             document.getElementById('btnPvp').classList.toggle('active', mode === 'pvp');
+            document.getElementById('btnOnline').classList.toggle('active', mode === 'online');
             document.getElementById('btnAi').classList.toggle('active', mode === 'ai');
+            
+            document.getElementById('onlinePanel').style.display = mode === 'online' ? 'flex' : 'none';
+
+            if (mode === 'online') {
+                setupPeer();
+            }
+
             resetGame();
         }
 
         function resetGame() {
+            if (gameMode === 'online' && conn && conn.open) {
+                conn.send({ type: 'reset' });
+            }
             initGame();
         }
 
-        function openRulesModal() {
-            document.getElementById('rulesModal').classList.add('active');
-        }
+        function openRulesModal() { document.getElementById('rulesModal').classList.add('active'); }
+        function closeRulesModal() { document.getElementById('rulesModal').classList.remove('active'); }
+        function closeVictoryModal() { document.getElementById('victoryModal').classList.remove('active'); }
 
-        function closeRulesModal() {
-            document.getElementById('rulesModal').classList.remove('active');
-        }
-
-        function closeVictoryModal() {
-            document.getElementById('victoryModal').classList.remove('active');
-        }
-
-        // Iniciar jogo ao carregar a página
-        window.onload = () => {
-            initGame();
-        };
+        window.onload = () => { initGame(); };
     </script>
 </body>
 </html>
