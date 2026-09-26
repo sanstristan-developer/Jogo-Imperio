@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Império Mobile</title>
+    <title>Jogo Império</title>
     <link rel="icon" href="favicon.png" type="image/png">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
@@ -757,8 +757,31 @@
         }
 
         function backToModesMenu() {
+            // Desconecta e limpa o estado online se estiver ativo
+            disconnectOnlineSession();
+
             document.getElementById('active-game-area').style.display = 'none';
             document.getElementById('game-modes-menu').style.display = 'flex';
+        }
+
+        function disconnectOnlineSession() {
+            if (conn) {
+                try { conn.close(); } catch(e){}
+                conn = null;
+            }
+            if (peer) {
+                try { peer.destroy(); } catch(e){}
+                peer = null;
+            }
+            myPlayerId = 1;
+            const statusEl = document.getElementById('online-status');
+            if (statusEl) {
+                statusEl.textContent = "Desconectado. Crie ou entre numa sala.";
+            }
+            const roomInput = document.getElementById('room-code-input');
+            if (roomInput) {
+                roomInput.value = "";
+            }
         }
 
         // --- LÓGICA DO JOGO IMPÉRIO ---
@@ -1095,19 +1118,29 @@
                 document.getElementById('online-status').textContent = "Adversário conectado!";
                 initGame();
             });
+
+            peer.on('error', (err) => {
+                console.error(err);
+                document.getElementById('online-status').textContent = "Erro na conexão.";
+            });
         }
 
         function createOnlineRoom() {
+            disconnectOnlineSession();
             setupPeer();
-            if (peer && peer.id) {
-                prompt("Envie este código para o seu oponente:", peer.id);
-            }
+            setTimeout(() => {
+                if (peer && peer.id) {
+                    prompt("Envie este código para o seu oponente:", peer.id);
+                }
+            }, 500);
         }
 
         function joinOnlineRoom() {
             const code = document.getElementById('room-code-input').value.trim();
             if (!code) return alert("Digite um código válido");
             
+            disconnectOnlineSession();
+
             peer = new Peer();
             peer.on('open', () => {
                 conn = peer.connect(code);
@@ -1116,14 +1149,25 @@
                 document.getElementById('online-status').textContent = "Conectado à sala!";
                 initGame();
             });
+
+            peer.on('error', (err) => {
+                console.error(err);
+                document.getElementById('online-status').textContent = "Erro ao entrar na sala.";
+            });
         }
 
         function setupConnectionListeners() {
+            if (!conn) return;
             conn.on('data', (data) => {
                 if (data.type === 'move') {
                     executeMove(data.fromR, data.fromC, data.toR, data.toC, data.moveInfo, false);
                     renderBoard();
                 }
+            });
+
+            conn.on('close', () => {
+                alert("O outro jogador se desconectou da sala.");
+                disconnectOnlineSession();
             });
         }
 
