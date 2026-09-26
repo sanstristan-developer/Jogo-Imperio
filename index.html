@@ -1,27 +1,27 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jogo Império</title>
-    <link rel="icon" href="favicon.png" type="image/png">
-    <!-- PeerJS para conetividade Multiplayer WebRTC -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Império Mobile</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         :root {
-            --bg-color: #1a1612;
-            --panel-bg: #2a221b;
+            --bg-color: #14110e;
+            --panel-bg: #221a14;
             --accent-gold: #d4af37;
+            --accent-gold-dark: #aa820a;
             --p1-color: #2b6cb0;
             --p1-light: #4299e1;
-            --p1-bg: rgba(66, 153, 225, 0.25);
+            --p1-bg: rgba(66, 153, 225, 0.3);
             --p2-color: #c53030;
             --p2-light: #f56565;
-            --p2-bg: rgba(245, 101, 101, 0.25);
+            --p2-bg: rgba(245, 101, 101, 0.3);
             --tile-light: #e2d8c3;
             --tile-dark: #b8a686;
             --text-color: #f7fafc;
             --text-dim: #a0aec0;
+            --bottom-nav-height: 60px;
         }
 
         * {
@@ -29,236 +29,221 @@
             margin: 0;
             padding: 0;
             user-select: none;
+            -webkit-touch-callout: none;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            min-height: 100vh;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding: 20px 10px;
         }
 
-        header {
-            text-align: center;
-            margin-bottom: 20px;
+        /* Orientação Horizontal vs Vertical */
+        body.landscape-mode {
+            transform: rotate(-90deg);
+            transform-origin: left top;
+            width: 100vh;
+            height: 100vw;
+            position: absolute;
+            top: 100%;
+            left: 0;
         }
 
-        header h1 {
-            font-size: 2.2rem;
-            color: var(--accent-gold);
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-
-        header p {
-            color: var(--text-dim);
-            font-size: 0.95rem;
-            margin-top: 5px;
-        }
-
-        .main-container {
+        /* TELA DE AUTENTICAÇÃO / LOGIN */
+        #auth-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-color);
+            z-index: 1000;
             display: flex;
-            flex-direction: row;
-            gap: 25px;
-            max-width: 1200px;
-            width: 100%;
+            flex-direction: column;
             justify-content: center;
-            align-items: flex-start;
-            flex-wrap: wrap;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            background-color: var(--panel-bg);
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            border-radius: 12px;
+            align-items: center;
             padding: 20px;
-            width: 320px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
-        }
-
-        .status-box {
-            background: rgba(0,0,0,0.3);
-            padding: 12px;
-            border-radius: 8px;
             text-align: center;
         }
 
-        .turn-indicator {
-            font-size: 1.1rem;
-            font-weight: bold;
+        .auth-card {
+            background: var(--panel-bg);
+            border: 2px solid var(--accent-gold);
+            border-radius: 16px;
+            padding: 25px;
+            width: 100%;
+            max-width: 360px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+        }
+
+        .auth-card h1 {
+            color: var(--accent-gold);
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .google-btn {
+            background: #ffffff;
+            color: #757575;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 0.95rem;
+            font-weight: 600;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
+            width: 100%;
+            margin: 20px 0;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
-        .turn-badge {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-
-        /* Painel Online */
-        .online-panel {
-            background: rgba(0,0,0,0.25);
-            border: 1px dashed var(--accent-gold);
-            border-radius: 8px;
-            padding: 12px;
+        .input-group {
             display: flex;
             flex-direction: column;
             gap: 8px;
-            font-size: 0.85rem;
+            text-align: left;
+            margin-bottom: 15px;
         }
 
-        .online-panel input {
-            padding: 8px;
-            border-radius: 4px;
+        .input-group label {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+        }
+
+        .input-group input {
+            padding: 12px;
+            border-radius: 8px;
             border: 1px solid #4a5568;
             background: #111;
             color: #fff;
+            font-size: 1rem;
+        }
+
+        /* CONTAINER DO CARROSSEL DE TELAS */
+        #app-viewport {
+            flex: 1;
             width: 100%;
-            font-size: 0.85rem;
-        }
-
-        .room-actions {
-            display: flex;
-            gap: 6px;
-        }
-
-        .room-actions button {
-            flex: 1;
-            font-size: 0.75rem;
-            padding: 8px 4px;
-        }
-
-        /* Progresso do Território */
-        .territory-tracker {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .player-score {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .score-info {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.95rem;
-            font-weight: 600;
-        }
-
-        .progress-bar-bg {
-            background-color: #1a1612;
-            height: 12px;
-            border-radius: 6px;
             overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
         }
 
-        .progress-bar-fill {
+        #screens-wrapper {
+            display: flex;
+            width: 300%;
             height: 100%;
-            width: 0%;
-            transition: width 0.3s ease;
+            transform: translateX(-33.333%);
+            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
-        .p1-fill { background-color: var(--p1-light); }
-        .p2-fill { background-color: var(--p2-light); }
-
-        .target-marker {
-            font-size: 0.8rem;
-            color: var(--accent-gold);
-            text-align: right;
-            margin-top: -2px;
-        }
-
-        /* Botões */
-        .controls {
+        .screen {
+            width: 33.333%;
+            height: 100%;
+            overflow-y: auto;
+            padding: 15px;
+            padding-bottom: calc(var(--bottom-nav-height) + 15px);
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            align-items: center;
         }
 
-        button {
-            background: linear-gradient(135deg, #d4af37, #aa820a);
-            color: #111;
-            border: none;
-            padding: 10px 15px;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            letter-spacing: 0.5px;
-        }
-
-        button:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
-        }
-
-        button.secondary {
-            background: #4a5568;
-            color: var(--text-color);
-        }
-
-        button.secondary:hover {
-            background: #718096;
-        }
-
-        .mode-toggle {
+        /* NAVEGAÇÃO INFERIOR */
+        .bottom-nav {
+            height: var(--bottom-nav-height);
+            width: 100%;
+            background-color: var(--panel-bg);
+            border-top: 1px solid rgba(212, 175, 55, 0.3);
             display: flex;
-            gap: 4px;
-            background: rgba(0,0,0,0.3);
-            padding: 4px;
-            border-radius: 6px;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            z-index: 500;
         }
 
-        .mode-btn {
+        .nav-item {
             flex: 1;
-            padding: 6px 2px;
-            background: transparent;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             color: var(--text-dim);
-            font-size: 0.7rem;
-            border-radius: 4px;
+            font-size: 0.75rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            transition: color 0.2s;
         }
 
-        .mode-btn.active {
-            background: var(--accent-gold);
-            color: #111;
+        .nav-item.active {
+            color: var(--accent-gold);
+            font-weight: bold;
         }
 
-        /* Tabuleiro */
-        .board-wrapper {
-            position: relative;
-            background: #120e0b;
-            padding: 15px;
+        .nav-icon {
+            font-size: 1.3rem;
+            margin-bottom: 2px;
+        }
+
+        /* CARD DE MODOS COM IMAGEM */
+        .mode-card {
+            background: var(--panel-bg);
+            border: 2px solid var(--accent-gold);
             border-radius: 12px;
-            box-shadow: 0 12px 28px rgba(0,0,0,0.6);
-            border: 2px solid rgba(212, 175, 55, 0.4);
+            overflow: hidden;
+            width: 100%;
+            max-width: 360px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        .mode-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .mode-card-content {
+            padding: 12px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .mode-card-content h3 {
+            color: var(--accent-gold);
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        /* TABULEIRO MOBILE */
+        .board-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 10px 0;
         }
 
         .board {
             display: grid;
-            grid-template-columns: repeat(8, 64px);
-            grid-template-rows: repeat(8, 64px);
-            gap: 2px;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            width: 90vw;
+            height: 90vw;
+            max-width: 360px;
+            max-height: 360px;
             background-color: #000;
-            border: 2px solid #333;
+            border: 2px solid var(--accent-gold);
+            border-radius: 6px;
+            overflow: hidden;
         }
 
         .square {
@@ -266,325 +251,372 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.8rem;
-            cursor: pointer;
-            transition: background-color 0.2s, box-shadow 0.2s;
+            font-size: 1.3rem;
         }
 
-        .square.light { background-color: var(--tile-light); color: #333; }
-        .square.dark { background-color: var(--tile-dark); color: #222; }
+        .square.light { background-color: var(--tile-light); }
+        .square.dark { background-color: var(--tile-dark); }
+        .square.territory-p1::after { content: ''; position: absolute; inset: 0; background-color: var(--p1-bg); border: 2px solid var(--p1-light); pointer-events: none; }
+        .square.territory-p2::after { content: ''; position: absolute; inset: 0; background-color: var(--p2-bg); border: 2px solid var(--p2-light); pointer-events: none; }
 
-        /* Territórios Dominados */
-        .square.territory-p1::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background-color: var(--p1-bg);
-            border: 2px solid var(--p1-light);
-            pointer-events: none;
-        }
+        .square.selected { outline: 2px solid #f6e05e; outline-offset: -2px; z-index: 3; }
+        .square.valid-move::before { content: ''; position: absolute; width: 12px; height: 12px; background-color: rgba(72, 187, 120, 0.8); border-radius: 50%; z-index: 3; }
+        .square.valid-capture::before { content: ''; position: absolute; inset: 0; border: 2px solid #e53e3e; background-color: rgba(229, 62, 62, 0.3); z-index: 3; }
+        .square.valid-convert::before { content: ''; position: absolute; inset: 0; border: 2px solid #d4af37; background-color: rgba(212, 175, 55, 0.3); z-index: 3; }
 
-        .square.territory-p2::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background-color: var(--p2-bg);
-            border: 2px solid var(--p2-light);
-            pointer-events: none;
-        }
-
-        .square .coord {
-            position: absolute;
-            bottom: 2px;
-            right: 4px;
-            font-size: 0.65rem;
-            color: rgba(0,0,0,0.4);
-            font-weight: bold;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        /* Peça */
-        .piece {
-            z-index: 2;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.15s ease;
-        }
-
-        .piece.p1 { color: #1a365d; filter: drop-shadow(0 2px 3px rgba(255,255,255,0.6)); }
-        .piece.p2 { color: #742a2a; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8)); }
-
-        .piece-label {
-            position: absolute;
-            top: -2px;
-            font-size: 0.55rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            padding: 0 2px;
-            border-radius: 2px;
-            background: rgba(0,0,0,0.7);
-            color: #fff;
-            white-space: nowrap;
-        }
+        .piece { z-index: 2; display: flex; align-items: center; justify-content: center; position: relative; }
+        .piece.p1 { color: #1a365d; filter: drop-shadow(0 1px 2px rgba(255,255,255,0.8)); }
+        .piece.p2 { color: #742a2a; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.8)); }
 
         .converted-tag {
             position: absolute;
-            bottom: -2px;
-            font-size: 0.5rem;
+            bottom: -6px;
+            font-size: 0.45rem;
             background: #d4af37;
             color: #000;
-            padding: 0 3px;
+            padding: 0 2px;
             border-radius: 2px;
             font-weight: bold;
         }
 
-        /* Destaques */
-        .square.selected {
-            outline: 3px solid #f6e05e;
-            outline-offset: -3px;
-            z-index: 3;
+        /* UI DOS COMPONENTES E TELAS */
+        .card {
+            background: var(--panel-bg);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            width: 100%;
+            max-width: 420px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
 
-        .square.valid-move::before {
-            content: '';
-            position: absolute;
-            width: 18px;
-            height: 18px;
-            background-color: rgba(72, 187, 120, 0.75);
-            border-radius: 50%;
-            z-index: 3;
-            box-shadow: 0 0 8px rgba(72, 187, 120, 0.9);
+        .card h2 {
+            color: var(--accent-gold);
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            padding-bottom: 6px;
         }
 
-        .square.valid-capture::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border: 3px solid #e53e3e;
-            background-color: rgba(229, 62, 62, 0.25);
-            z-index: 3;
+        /* BOTÕES GERAIS */
+        .btn {
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dark));
+            color: #111;
+            border: none;
+            padding: 12px;
+            font-weight: bold;
+            border-radius: 8px;
+            width: 100%;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 5px;
         }
 
-        .square.valid-convert::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border: 3px solid #d4af37;
-            background-color: rgba(212, 175, 55, 0.3);
-            z-index: 3;
+        .btn-secondary {
+            background: #4a5568;
+            color: #fff;
         }
 
-        /* Registo de Jogadas */
-        .log-box {
-            background: rgba(0,0,0,0.4);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 6px;
-            padding: 10px;
-            height: 120px;
-            overflow-y: auto;
-            font-size: 0.8rem;
+        .btn-group {
             display: flex;
-            flex-direction: column;
-            gap: 4px;
+            gap: 8px;
+            margin-bottom: 10px;
         }
 
-        .log-entry { color: var(--text-dim); line-height: 1.3; }
-        .log-entry.p1 { color: var(--p1-light); }
-        .log-entry.p2 { color: var(--p2-light); }
-        .log-entry.special { color: var(--accent-gold); font-weight: bold; }
-
-        /* Modais */
-        .modal-overlay {
+        /* MODAL E TUTORIAL OVERLAY */
+        #tutorial-overlay, #victory-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.8);
-            display: flex;
+            background: rgba(0,0,0,0.9);
+            z-index: 900;
+            display: none;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 100;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
+            padding: 20px;
+            color: #fff;
         }
 
-        .modal-overlay.active { opacity: 1; pointer-events: auto; }
-
-        .modal {
+        .tutorial-box {
             background: var(--panel-bg);
             border: 2px solid var(--accent-gold);
             border-radius: 12px;
-            width: 90%;
-            max-width: 600px;
-            max-height: 85vh;
-            overflow-y: auto;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            padding: 20px;
+            text-align: center;
+            max-width: 380px;
+            width: 100%;
         }
 
-        .modal h2 { color: var(--accent-gold); margin-bottom: 15px; text-align: center; }
-        .modal p, .modal li { font-size: 0.9rem; line-height: 1.5; color: #e2e8f0; margin-bottom: 10px; }
-        .modal ul { padding-left: 20px; margin-bottom: 15px; }
-        .modal-close { display: block; margin: 20px auto 0; width: 120px; }
+        .avatar-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 15px 0;
+        }
 
-        @media (max-width: 680px) {
-            .board { grid-template-columns: repeat(8, 42px); grid-template-rows: repeat(8, 42px); }
-            .square { font-size: 1.2rem; }
-            .sidebar { width: 100%; max-width: 352px; }
-            .piece-label { display: none; }
+        .avatar-option {
+            font-size: 2rem;
+            padding: 10px;
+            border: 2px solid transparent;
+            border-radius: 50%;
+            background: #111;
+            cursor: pointer;
+        }
+
+        .avatar-option.selected {
+            border-color: var(--accent-gold);
+            background: rgba(212, 175, 55, 0.2);
+        }
+
+        .bet-selector {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #111;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>Império</h1>
-        <p>Conquiste 33 territórios ou elimine o Sinhô e a Sinhá adversários para vencer!</p>
-    </header>
+    <!-- TELA 0: AUTENTICAÇÃO E PERFIL INICIAL -->
+    <div id="auth-overlay">
+        <div class="auth-card">
+            <h1>IMPÉRIO</h1>
+            <p style="color: var(--text-dim); font-size: 0.85rem;">Conquiste territórios e domine a partida</p>
+            
+            <button class="google-btn" onclick="fakeGoogleLogin()">
+                <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.74-.06-1.28-.19-1.84H9v3.34h4.96c-.1.83-.64 2.08-1.84 2.92l-.01.12 2.72 2.11.19.02c1.73-1.6 2.72-3.97 2.72-6.67z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.25c-.76.53-1.78.9-3.06.9-2.34 0-4.32-1.55-5.03-3.67l-.12.01-2.8 2.17-.04.11C2.49 16.08 5.51 18 9 18z"/><path fill="#FBBC05" d="M3.97 10.8c-.18-.53-.28-1.1-.28-1.8s.1-1.27.28-1.8l-.01-.13-2.8-2.18-.09.04C.38 6.19 0 7.55 0 9s.38 2.81 1.07 4.07l2.9-2.27z"/><path fill="#EA4335" d="M9 3.58c1.7 0 2.86.74 3.51 1.35l2.6-2.54C13.51.83 11.43 0 9 0 5.51 0 2.49 1.92 1.07 4.93l2.9 2.27C4.68 5.13 6.66 3.58 9 3.58z"/></svg>
+                Vincular Conta Google
+            </button>
 
-    <div class="main-container">
-        <!-- Tabuleiro -->
-        <div class="board-wrapper">
-            <div id="board" class="board"></div>
+            <div class="input-group">
+                <label for="username">Nome de Perfil:</label>
+                <input type="text" id="username" placeholder="Digite seu apelido..." value="Imperador">
+            </div>
+
+            <button class="btn" onclick="submitProfile()">ENTRAR E APRENDER</button>
         </div>
+    </div>
 
-        <!-- Painel Lateral -->
-        <div class="sidebar">
-            <div class="status-box">
-                <div class="turn-indicator" id="turnIndicator">
-                    <span class="turn-badge" id="turnBadge" style="background-color: var(--p1-light);"></span>
-                    <span id="turnText">Vez do Jogador 1 (Azul)</span>
+    <!-- TUTORIAL INTERATIVO -->
+    <div id="tutorial-overlay">
+        <div class="tutorial-box">
+            <h2 id="tut-title" style="color: var(--accent-gold); margin-bottom: 10px;">Tutorial: Como Jogar</h2>
+            <p id="tut-text" style="font-size: 0.95rem; line-height: 1.4; margin-bottom: 15px;">
+                Bem-vindo ao Império! O objetivo principal é dominar 33 ou mais territórios ou eliminar o Sinhô e a Sinhá do adversário.
+            </p>
+            <button class="btn" id="tut-next-btn" onclick="nextTutorialStep()">PRÓXIMO</button>
+        </div>
+    </div>
+
+    <!-- MODAL DE VITÓRIA -->
+    <div id="victory-overlay">
+        <div class="tutorial-box" style="text-align: center;">
+            <h2 id="victory-title" style="color: var(--accent-gold); font-size: 1.8rem; margin-bottom: 10px;">Vitória!</h2>
+            <p id="victory-desc" style="font-size: 0.95rem; line-height: 1.4; margin-bottom: 15px;"></p>
+            <button class="btn" onclick="closeVictoryModal()">JOGAR NOVAMENTE</button>
+        </div>
+    </div>
+
+    <!-- ESTRUTURA PRINCIPAL COM SWIPE (3 TELAS) -->
+    <div id="app-viewport">
+        <div id="screens-wrapper">
+            
+            <!-- TELA DA ESQUERDA: PERFIL E CONFIGURAÇÕES -->
+            <div class="screen" id="screen-profile">
+                <div class="card">
+                    <h2>Meu Perfil</h2>
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <div id="profile-avatar-display" style="font-size: 3rem;">👑</div>
+                        <h3 id="profile-name-display">Imperador</h3>
+                        <p style="color: var(--text-dim); font-size: 0.8rem;">Nível 1 • Conta Vinculada Google</p>
+                    </div>
+
+                    <label style="font-size: 0.85rem; color: var(--text-dim);">Personalize seu Ícone:</label>
+                    <div class="avatar-selector">
+                        <span class="avatar-option selected" onclick="selectAvatar('👑', this)">👑</span>
+                        <span class="avatar-option" onclick="selectAvatar('🦁', this)">🦁</span>
+                        <span class="avatar-option" onclick="selectAvatar('⚔️', this)">⚔️</span>
+                        <span class="avatar-option" onclick="selectAvatar('🛡️', this)">🛡️</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Configurações do Jogo</h2>
+                    <div class="input-group">
+                        <label>Orientação da Tela:</label>
+                        <div class="btn-group">
+                            <button class="btn" id="btn-portrait" onclick="setOrientation('portrait')">Vertical</button>
+                            <button class="btn btn-secondary" id="btn-landscape" onclick="setOrientation('landscape')">Horizontal</button>
+                        </div>
+                    </div>
+
+                    <div class="input-group" style="margin-top: 10px;">
+                        <label>Efeitos de Som:</label>
+                        <button class="btn btn-secondary" id="sound-toggle" onclick="toggleSound()">Som: ATIVADO</button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Seleção de Modo de Jogo -->
-            <div class="mode-toggle">
-                <button class="mode-btn active" id="btnPvp" onclick="setGameMode('pvp')">Local (2P)</button>
-                <button class="mode-btn" id="btnOnline" onclick="setGameMode('online')">Online (WebRTC)</button>
-                <button class="mode-btn" id="btnAi" onclick="setGameMode('ai')">Contra Bot</button>
-            </div>
-
-            <!-- Painel de Controlo Multiplayer (Online) -->
-            <div class="online-panel" id="onlinePanel" style="display: none;">
-                <div style="font-weight: bold; color: var(--accent-gold);">Conexão Multiplayer</div>
-                <div id="onlineStatus">Desconectado. Crie ou entre numa sala.</div>
+            <!-- TELA DO MEIO: PRINCIPAL (SELEÇÃO DE MODOS DE JOGO) -->
+            <div class="screen" id="screen-main">
                 
-                <div class="room-actions">
-                    <button onclick="createOnlineRoom()">Criar Sala</button>
+                <!-- MENU DE SELEÇÃO DE MODOS DE JOGO POR IMAGEM -->
+                <div id="game-modes-menu" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+                    
+                    <!-- MODO 1: LOCAL 1x1 -->
+                    <div class="mode-card">
+                        <img src="modo-local.png" alt="Modo 1x1 Local" onerror="this.src='https://images.unsplash.com/photo-1612287233306-60451f22e8f1?w=400'">
+                        <div class="mode-card-content">
+                            <h3>1x1 Local</h3>
+                            <button class="btn" onclick="startSelectedMode('pvp')">JOGAR</button>
+                        </div>
+                    </div>
+
+                    <!-- MODO 2: CONTRA BOT -->
+                    <div class="mode-card">
+                        <img src="modo-bot.png" alt="Modo 1 vs Bot" onerror="this.src='https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400'">
+                        <div class="mode-card-content">
+                            <h3>Contra Bot</h3>
+                            <button class="btn" onclick="startSelectedMode('ai')">JOGAR</button>
+                        </div>
+                    </div>
+
+                    <!-- MODO 3: ONLINE 1x1 -->
+                    <div class="mode-card">
+                        <img src="modo-online.png" alt="Modo 1x1 Online" onerror="this.src='https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400'">
+                        <div class="mode-card-content">
+                            <h3>1x1 Online</h3>
+                            <button class="btn" onclick="startSelectedMode('online')">JOGAR</button>
+                        </div>
+                    </div>
+
                 </div>
 
-                <div style="display: flex; gap: 4px; margin-top: 4px;">
-                    <input type="text" id="joinRoomId" placeholder="Código da sala...">
-                    <button onclick="joinOnlineRoom()" style="width: auto; padding: 0 10px;">Entrar</button>
+                <!-- ÁREA DE JOGO (TABULEIRO E CONTROLES) - EXIBIDA AO CLICAR EM JOGAR -->
+                <div id="active-game-area" style="display: none; width: 100%; max-width: 420px; flex-direction: column; align-items: center;">
+                    <button class="btn btn-secondary" onclick="backToModesMenu()" style="margin-bottom: 10px;">← Voltar ao Menu</button>
+
+                    <!-- Painel Online Integrado -->
+                    <div class="card" id="online-controls" style="display: none; padding: 10px;">
+                        <p id="online-status" style="font-size: 0.8rem; color: var(--accent-gold); margin-bottom: 5px;">Desconectado. Crie ou entre numa sala.</p>
+                        <div class="btn-group">
+                            <button class="btn" onclick="createOnlineRoom()">Criar Sala</button>
+                            <input type="text" id="room-code-input" placeholder="Código..." style="width: 50%; padding: 5px; border-radius: 4px; border: 1px solid #4a5568; background: #000; color: #fff;">
+                            <button class="btn btn-secondary" onclick="joinOnlineRoom()">Entrar</button>
+                        </div>
+                    </div>
+
+                    <!-- Tabuleiro principal -->
+                    <div class="board-container">
+                        <div id="main-board" class="board"></div>
+                    </div>
+
+                    <div class="card" style="padding: 10px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: bold;">
+                            <span style="color: var(--p1-light);">P1: <span id="p1-score">16</span> ter.</span>
+                            <span style="color: var(--p2-light);">P2: <span id="p2-score">16</span> ter.</span>
+                        </div>
+                        <div id="game-status-text" style="text-align: center; margin-top: 5px; font-size: 0.8rem; color: var(--text-dim);">
+                            Sua Vez (Azul)
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- TELA DA DIREITA: MODO COMPETIÇÃO (APOSTAS) -->
+            <div class="screen" id="screen-competition">
+                <div class="card">
+                    <h2>Modo Competição 🏆</h2>
+                    <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 10px;">
+                        Dispute partidas valendo dinheiro real com taxa garantida e sistema seguro.
+                    </p>
+
+                    <div class="bet-selector">
+                        <span style="font-size: 0.9rem;">Valor da Aposta:</span>
+                        <select id="bet-amount" style="padding: 8px; border-radius: 6px; background: #222; color: var(--accent-gold); font-weight: bold; border: 1px solid var(--accent-gold);">
+                            <option value="0.10">R$ 0,10</option>
+                            <option value="0.25">R$ 0,25</option>
+                            <option value="0.50">R$ 0,50</option>
+                            <option value="1.00">R$ 1,00</option>
+                        </select>
+                    </div>
+
+                    <button class="btn" onclick="startCompetitiveMatch()">ENCONTRAR ADVERSÁRIO</button>
+                </div>
+
+                <div class="card">
+                    <h2>Instruções e Regras</h2>
+                    <ul style="font-size: 0.8rem; color: var(--text-dim); padding-left: 18px; line-height: 1.5;">
+                        <li><strong>Valores permitidos:</strong> Mínimo R$ 0,10 / Máximo R$ 1,00 por partida.</li>
+                        <li><strong>Taxa da Plataforma:</strong> 10% sobre o prêmio total da mesa.</li>
+                        <li><strong>Condição de Vitória:</strong> 33 territórios dominados ou eliminar Sinhô e Sinhá.</li>
+                        <li><strong>Peças Especiais:</strong> Jesuítas convertem peças e Bandeirantes recuperam as suas.</li>
+                    </ul>
                 </div>
             </div>
 
-            <!-- Progresso dos Territórios -->
-            <div class="territory-tracker">
-                <div class="player-score">
-                    <div class="score-info">
-                        <span style="color: var(--p1-light)">Jogador 1 (Azul)</span>
-                        <span id="p1Score">16 / 64</span>
-                    </div>
-                    <div class="progress-bar-bg">
-                        <div id="p1Bar" class="progress-bar-fill p1-fill" style="width: 25%;"></div>
-                    </div>
-                </div>
-
-                <div class="player-score">
-                    <div class="score-info">
-                        <span style="color: var(--p2-light)">Jogador 2 (Vermelho)</span>
-                        <span id="p2Score">16 / 64</span>
-                    </div>
-                    <div class="progress-bar-bg">
-                        <div id="p2Bar" class="progress-bar-fill p2-fill" style="width: 25%;"></div>
-                    </div>
-                </div>
-                <div class="target-marker">Vitória: 33 territórios OU eliminar Sinhô e Sinhá</div>
-            </div>
-
-            <!-- Botões de Ação -->
-            <div class="controls">
-                <button onclick="resetGame()">Novo Jogo</button>
-                <button class="secondary" onclick="openRulesModal()">Regras do Jogo</button>
-            </div>
-
-            <!-- Registo de Ações -->
-            <div>
-                <div style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 5px; font-weight: bold;">Histórico de Jogadas:</div>
-                <div class="log-box" id="logBox"></div>
-            </div>
         </div>
     </div>
 
-    <!-- Modal de Regras -->
-    <div class="modal-overlay" id="rulesModal">
-        <div class="modal">
-            <h2>Regras do Jogo Império</h2>
-            <p><strong>Condições de Vitória:</strong></p>
-            <ul>
-                <li>Dominar <strong>33 ou mais</strong> dos 64 territórios do tabuleiro.</li>
-                <li><strong>OU</strong> Eliminar <strong>ambos o Sinhô e a Sinhá</strong> do jogador adversário. (Se for eliminado apenas um deles, a partida continua!).</li>
-            </ul>
-            <p><strong>Domínio de Território:</strong> Um território é dominado quando uma peça <em>termina</em> o seu movimento nessa casa. Passar por uma casa não a domina. O território continua a pertencer ao jogador mesmo depois da peça sair dele.</p>
-            <p><strong>Movimentação das Peças:</strong></p>
-            <ul>
-                <li><strong>Escravos (♟):</strong> Movem-se 1 casa em qualquer direção (frente, trás, lados, diagonais).</li>
-                <li><strong>Sinhô (♚) e Sinhá (♛):</strong> Movem-se como o Bispo do xadrez (diagonais, qualquer distância).</li>
-                <li><strong>Indígenas (🏹):</strong> Movem-se como a Rainha do xadrez (todas as direções, qualquer distância).</li>
-                <li><strong>Jesuítas (✝):</strong> Movem-se como a Torre do xadrez (linhas retas ortogonais).</li>
-                <li><strong>Bandeirantes (🐎):</strong> Movem-se como o Cavalo do xadrez (em "L").</li>
-            </ul>
-            <p><strong>Domínio e Recuperação de Peças:</strong></p>
-            <ul>
-                <li><strong>Jesuítas:</strong> Quando alcancem um <em>Escravo</em> ou <em>Indígena</em> adversário, dominam a peça. A peça passa para o novo dono e permanece no jogo!</li>
-                <li><strong>Bandeirantes:</strong> Podem recuperar <em>Escravos</em> ou <em>Indígenas</em> originais da sua equipa que tenham sido dominados pelo adversário.</li>
-                <li><strong>Sinhô, Sinhá, Jesuítas e Bandeirantes:</strong> Não podem mudar de dono, mas são eliminados se uma peça adversária aterrar na sua casa.</li>
-            </ul>
-            <button class="modal-close" onclick="closeRulesModal()">Fechar</button>
-        </div>
-    </div>
-
-    <!-- Modal de Vitória -->
-    <div class="modal-overlay" id="victoryModal">
-        <div class="modal" style="text-align: center;">
-            <h2 id="victoryTitle" style="font-size: 2rem;">Vitória!</h2>
-            <p id="victoryDesc" style="font-size: 1.1rem; margin: 15px 0;"></p>
-            <button class="modal-close" onclick="closeVictoryModal(); resetGame();">JOGAR NOVAMENTE</button>
-        </div>
-    </div>
+    <!-- BARRA DE NAVEGAÇÃO INFERIOR -->
+    <nav class="bottom-nav">
+        <button class="nav-item" id="nav-left" onclick="switchScreen(0)">
+            <span class="nav-icon">👤</span>
+            Perfil
+        </button>
+        <button class="nav-item active" id="nav-center" onclick="switchScreen(1)">
+            <span class="nav-icon">⚔️</span>
+            Principal
+        </button>
+        <button class="nav-item" id="nav-right" onclick="switchScreen(2)">
+            <span class="nav-icon">💰</span>
+            Competição
+        </button>
+    </nav>
 
     <script>
-        // --- ESTADO DO JOGO ---
+        // --- ESTADO GLOBAL DA APLICAÇÃO ---
+        let currentScreenIndex = 1; // 0: Perfil, 1: Principal, 2: Competição
+        let soundEnabled = true;
+        let selectedAvatar = '👑';
+        let playerProfileName = "Imperador";
+
+        // Estado do Jogo
         const BOARD_SIZE = 8;
-        let board = []; 
+        let board = [];
         let currentTurn = 1; 
         let selectedSquare = null;
         let validMoves = [];
-        let gameMode = 'pvp'; // 'pvp', 'ai' ou 'online'
+        let gameMode = 'pvp'; // 'pvp', 'ai', 'online'
         let gameOver = false;
 
-        // --- VARIÁVEIS MULTIPLAYER (PeerJS) ---
+        // PeerJS (Online)
         let peer = null;
         let conn = null;
-        let myPlayerId = 1; // Host = 1, Client = 2
+        let myPlayerId = 1;
 
-        // Configuração das Peças
+        // Definição das Peças
         const PIECE_TYPES = {
-            escravo:     { name: "Escravo",     symbol: "♟", convertible: true },
-            indigena:    { name: "Indígena",    symbol: "🏹", convertible: true },
-            sinho:       { name: "Sinhô",       symbol: "♚", convertible: false },
-            sinha:       { name: "Sinhá",       symbol: "♛", convertible: false },
-            jesuita:     { name: "Jesuíta",     symbol: "✝", convertible: false },
-            bandeirante: { name: "Bandeirante", symbol: "🐎", convertible: false }
+            escravo:     { name: "Escravo",     symbol: "♟" },
+            indigena:    { name: "Indígena",    symbol: "🏹" },
+            sinho:       { name: "Sinhô",       symbol: "♚" },
+            sinha:       { name: "Sinhá",       symbol: "♛" },
+            jesuita:     { name: "Jesuíta",     symbol: "✝" },
+            bandeirante: { name: "Bandeirante", symbol: "🐎" }
         };
 
-        // Som sintetizado (Web Audio API)
+        // --- AUDIO SINTETIZADO ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(freq, duration = 0.1, type = 'sine') {
+            if (!soundEnabled) return;
             try {
                 if (audioCtx.state === 'suspended') audioCtx.resume();
                 const osc = audioCtx.createOscillator();
@@ -600,7 +632,139 @@
             } catch (e) {}
         }
 
-        // --- INICIALIZAÇÃO DO JOGO ---
+        // --- SISTEMA DE GESTOS SWIPE PARA NAVEGAÇÃO ---
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const viewport = document.getElementById('app-viewport');
+        viewport.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, false);
+
+        viewport.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, false);
+
+        function handleSwipe() {
+            const threshold = 50;
+            if (touchEndX < touchStartX - threshold) {
+                if (currentScreenIndex < 2) switchScreen(currentScreenIndex + 1);
+            }
+            if (touchEndX > touchStartX + threshold) {
+                if (currentScreenIndex > 0) switchScreen(currentScreenIndex - 1);
+            }
+        }
+
+        function switchScreen(index) {
+            currentScreenIndex = index;
+            const wrapper = document.getElementById('screens-wrapper');
+            const offset = -index * 33.333;
+            wrapper.style.transform = `translateX(${offset}%)`;
+
+            document.querySelectorAll('.nav-item').forEach((item, idx) => {
+                item.classList.toggle('active', idx === index);
+            });
+        }
+
+        // --- AUTENTICAÇÃO E PERFIL ---
+        function fakeGoogleLogin() {
+            alert("Conta Google vinculada com sucesso!");
+        }
+
+        function submitProfile() {
+            const nameInput = document.getElementById('username').value.trim();
+            if (nameInput) playerProfileName = nameInput;
+            document.getElementById('profile-name-display').textContent = playerProfileName;
+            
+            document.getElementById('auth-overlay').style.display = 'none';
+            startTutorial();
+        }
+
+        function selectAvatar(symbol, el) {
+            selectedAvatar = symbol;
+            document.querySelectorAll('.avatar-option').forEach(opt => opt.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('profile-avatar-display').textContent = symbol;
+        }
+
+        function setOrientation(mode) {
+            if (mode === 'landscape') {
+                document.body.classList.add('landscape-mode');
+                document.getElementById('btn-landscape').classList.remove('btn-secondary');
+                document.getElementById('btn-portrait').classList.add('btn-secondary');
+            } else {
+                document.body.classList.remove('landscape-mode');
+                document.getElementById('btn-portrait').classList.remove('btn-secondary');
+                document.getElementById('btn-landscape').classList.add('btn-secondary');
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('sound-toggle').textContent = `Som: ${soundEnabled ? 'ATIVADO' : 'DESATIVADO'}`;
+        }
+
+        // --- TUTORIAL INTERATIVO ---
+        let currentTutStep = 0;
+        const tutSteps = [
+            { title: "Objetivo de Vitória", text: "Para vencer a partida você deve dominar no mínimo 33 territórios OU capturar/eliminar simultaneamente o Sinhô e a Sinhá do adversário." },
+            { title: "Movimentação das Peças", text: "Escravos movem-se 1 casa. Sinhô, Sinhá e Indígenas movem-se em longas distâncias diagonais ou livres. Jesuítas movem-se em linha reta e Bandeirantes em 'L'." },
+            { title: "Conversão e Recuperação", text: "Jesuítas convertem Escravos e Indígenas rivais. Bandeirantes recuperam peças convertidas da sua própria equipe. Estratégia e domínio de território definem o Imperador!" }
+        ];
+
+        function startTutorial() {
+            currentTutStep = 0;
+            document.getElementById('tutorial-overlay').style.display = 'flex';
+            renderTutStep();
+        }
+
+        function renderTutStep() {
+            const step = tutSteps[currentTutStep];
+            document.getElementById('tut-title').textContent = step.title;
+            document.getElementById('tut-text').textContent = step.text;
+            if (currentTutStep === tutSteps.length - 1) {
+                document.getElementById('tut-next-btn').textContent = "ENTENDER E JOGAR";
+            }
+        }
+
+        function nextTutorialStep() {
+            currentTutStep++;
+            if (currentTutStep >= tutSteps.length) {
+                document.getElementById('tutorial-overlay').style.display = 'none';
+            } else {
+                renderTutStep();
+            }
+        }
+
+        function closeVictoryModal() {
+            document.getElementById('victory-overlay').style.display = 'none';
+            initGame();
+        }
+
+        // --- GERENCIAMENTO DE MODOS E TELA PRINCIPAL ---
+        function startSelectedMode(mode) {
+            gameMode = mode;
+            document.getElementById('game-modes-menu').style.display = 'none';
+            document.getElementById('active-game-area').style.display = 'flex';
+            document.getElementById('online-controls').style.display = mode === 'online' ? 'block' : 'none';
+            
+            if (mode === 'online') {
+                setupPeer();
+            }
+            initGame();
+        }
+
+        function backToModesMenu() {
+            document.getElementById('active-game-area').style.display = 'none';
+            document.getElementById('game-modes-menu').style.display = 'flex';
+        }
+
+        // --- LÓGICA DO JOGO IMPÉRIO ---
+        function createPiece(type, owner) {
+            return { type, originalOwner: owner, currentOwner: owner };
+        }
+
         function initGame() {
             board = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null));
             currentTurn = 1;
@@ -613,142 +777,24 @@
                     let territoryOwner = 0;
                     if (r === 0 || r === 1) territoryOwner = 2;
                     if (r === 6 || r === 7) territoryOwner = 1;
-
                     board[r][c] = { r, c, territory: territoryOwner, piece: null };
                 }
             }
 
             const backRowSetup = ['indigena', 'bandeirante', 'jesuita', 'sinha', 'sinho', 'jesuita', 'bandeirante', 'indigena'];
-
             for (let c = 0; c < BOARD_SIZE; c++) {
                 board[0][c].piece = createPiece(backRowSetup[c], 2);
                 board[1][c].piece = createPiece('escravo', 2);
-            }
-
-            for (let c = 0; c < BOARD_SIZE; c++) {
                 board[6][c].piece = createPiece('escravo', 1);
                 board[7][c].piece = createPiece(backRowSetup[c], 1);
             }
 
-            document.getElementById('logBox').innerHTML = '';
-            addLog("Partida iniciada! Que vença o melhor império.", "special");
             renderBoard();
             updateUI();
         }
 
-        function createPiece(type, owner) {
-            return { type, originalOwner: owner, currentOwner: owner };
-        }
-
-        // --- LÓGICA MULTIPLAYER (WebRTC / PeerJS) ---
-        function setupPeer() {
-            if (peer) return;
-            
-            // Cria um ID aleatório simples para a sala
-            const randomId = Math.floor(100000 + Math.random() * 900000).toString();
-            peer = new Peer(randomId);
-
-            peer.on('open', (id) => {
-                document.getElementById('onlineStatus').textContent = `Servidor pronto. O seu ID é: ${id}`;
-            });
-
-            peer.on('connection', (connection) => {
-                conn = connection;
-                myPlayerId = 1; // Quem recebe a conexão é o Jogador 1 (Host)
-                setupConnectionListeners();
-                document.getElementById('onlineStatus').textContent = "Jogador 2 conetado! Jogo iniciado.";
-                addLog("O Jogador 2 juntou-se à partida online!", "special");
-                resetGame();
-            });
-
-            peer.on('error', (err) => {
-                alert("Erro na conexão PeerJS: " + err.type);
-            });
-        }
-
-        function createOnlineRoom() {
-            setupPeer();
-            if (peer && peer.id) {
-                prompt("Copie e envie este código para o seu amigo:", peer.id);
-            }
-        }
-
-        function joinOnlineRoom() {
-            const targetId = document.getElementById('joinRoomId').value.trim();
-            if (!targetId) {
-                alert("Por favor, insira o código da sala.");
-                return;
-            }
-
-            document.getElementById('onlineStatus').textContent = "Conectado";
-
-            // Função para iniciar a conexão
-            const connectToPeer = () => {
-                conn = peer.connect(targetId);
-                myPlayerId = 2; // Quem se conecta é o Jogador 2
-                
-                conn.on('open', () => {
-                    setupConnectionListeners();
-                });
-
-                conn.on('error', (err) => {
-                    alert("Erro ao conectar à sala: " + err);
-                    document.getElementById('onlineStatus').textContent = "Erro de conexão.";
-                });
-            };
-
-            // Se o peer ainda não existe, cria um novo
-            if (!peer) {
-                peer = new Peer();
-                peer.on('open', () => {
-                    connectToPeer();
-                });
-            } else if (peer.open) {
-                // Se o peer já estiver aberto, conecta diretamente
-                connectToPeer();
-            } else {
-                // Se o peer já foi instanciado mas ainda não abriu
-                peer.on('open', () => {
-                    connectToPeer();
-                });
-            }
-        }
-
-        function setupConnectionListeners() {
-            conn.on('open', () => {
-                document.getElementById('onlineStatus').textContent = `Conetado à sala! Jogas como Jogador ${myPlayerId}.`;
-                addLog(`Conetado com sucesso! É o Jogador ${myPlayerId}.`, "special");
-                resetGame();
-            });
-
-            conn.on('data', (data) => {
-                if (data.type === 'move') {
-                    // Executa a jogada vinda do adversário via rede
-                    executeMove(data.fromR, data.fromC, data.toR, data.toC, data.moveInfo, false);
-                    renderBoard();
-                } else if (data.type === 'reset') {
-                    initGame();
-                }
-            });
-
-            conn.on('close', () => {
-                document.getElementById('onlineStatus').textContent = "O adversário desconectou-se.";
-                addLog("A conexão com o outro jogador foi perdida.", "special");
-            });
-        }
-
-        function sendMoveToPeer(fromR, fromC, toR, toC, moveInfo) {
-            if (gameMode === 'online' && conn && conn.open) {
-                conn.send({
-                    type: 'move',
-                    fromR, fromC, toR, toC, moveInfo
-                });
-            }
-        }
-
-        // --- RENDERIZAÇÃO DO TABULEIRO ---
         function renderBoard() {
-            const boardEl = document.getElementById('board');
+            const boardEl = document.getElementById('main-board');
             boardEl.innerHTML = '';
 
             for (let r = 0; r < BOARD_SIZE; r++) {
@@ -766,33 +812,23 @@
                         squareEl.classList.add('selected');
                     }
 
-                    const moveInfo = validMoves.find(m => m.r === r && m.c === c);
-                    if (moveInfo) {
-                        if (moveInfo.action === 'move') squareEl.classList.add('valid-move');
-                        if (moveInfo.action === 'capture') squareEl.classList.add('valid-capture');
-                        if (moveInfo.action === 'convert' || moveInfo.action === 'recover') squareEl.classList.add('valid-convert');
+                    const move = validMoves.find(m => m.r === r && m.c === c);
+                    if (move) {
+                        if (move.action === 'move') squareEl.classList.add('valid-move');
+                        else if (move.action === 'capture') squareEl.classList.add('valid-capture');
+                        else if (move.action === 'convert' || move.action === 'recover') squareEl.classList.add('valid-convert');
                     }
-
-                    const coordSpan = document.createElement('span');
-                    coordSpan.className = 'coord';
-                    coordSpan.textContent = `${String.fromCharCode(65 + c)}${8 - r}`;
-                    squareEl.appendChild(coordSpan);
 
                     if (cell.piece) {
                         const pieceEl = document.createElement('div');
                         const p = cell.piece;
                         pieceEl.className = `piece p${p.currentOwner}`;
-                        pieceEl.innerHTML = `<span>${PIECE_TYPES[p.type].symbol}</span>`;
-
-                        const labelEl = document.createElement('span');
-                        labelEl.className = 'piece-label';
-                        labelEl.textContent = PIECE_TYPES[p.type].name;
-                        pieceEl.appendChild(labelEl);
+                        pieceEl.textContent = PIECE_TYPES[p.type].symbol;
 
                         if (p.currentOwner !== p.originalOwner) {
                             const tagEl = document.createElement('span');
                             tagEl.className = 'converted-tag';
-                            tagEl.textContent = 'Dominado';
+                            tagEl.textContent = 'Dom';
                             pieceEl.appendChild(tagEl);
                         }
 
@@ -805,11 +841,8 @@
             }
         }
 
-        // --- INTERAÇÃO DO JOGADOR ---
         function handleSquareClick(r, c) {
             if (gameOver) return;
-
-            // Restrições de turno
             if (gameMode === 'ai' && currentTurn === 2) return;
             if (gameMode === 'online' && currentTurn !== myPlayerId) return;
 
@@ -838,69 +871,57 @@
             renderBoard();
         }
 
-        // --- CÁLCULO DE MOVIMENTOS VÁLIDOS ---
         function getValidMoves(r, c) {
             const cell = board[r][c];
             if (!cell.piece) return [];
-
             const piece = cell.piece;
             const moves = [];
 
             const addMoveIfValid = (tr, tc) => {
                 if (tr < 0 || tr >= BOARD_SIZE || tc < 0 || tc >= BOARD_SIZE) return false;
+                const target = board[tr][tc];
                 
-                const targetCell = board[tr][tc];
-
-                if (!targetCell.piece) {
+                if (!target.piece) {
                     moves.push({ r: tr, c: tc, action: 'move' });
                     return true;
                 }
-
-                if (targetCell.piece.currentOwner === piece.currentOwner) {
+                if (target.piece.currentOwner === piece.currentOwner) {
                     return false;
                 }
 
-                const targetPiece = targetCell.piece;
-
+                const targetPiece = target.piece;
                 if (piece.type === 'jesuita' && (targetPiece.type === 'escravo' || targetPiece.type === 'indigena') && targetPiece.originalOwner !== piece.currentOwner) {
                     moves.push({ r: tr, c: tc, action: 'convert' });
-                } 
-                else if (piece.type === 'bandeirante' && (targetPiece.type === 'escravo' || targetPiece.type === 'indigena') && targetPiece.originalOwner === piece.currentOwner) {
+                } else if (piece.type === 'bandeirante' && (targetPiece.type === 'escravo' || targetPiece.type === 'indigena') && targetPiece.originalOwner === piece.currentOwner) {
                     moves.push({ r: tr, c: tc, action: 'recover' });
-                } 
-                else {
+                } else {
                     moves.push({ r: tr, c: tc, action: 'capture' });
                 }
-
                 return false;
             };
 
             if (piece.type === 'escravo') {
                 const dirs = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
                 dirs.forEach(([dr, dc]) => addMoveIfValid(r + dr, c + dc));
-            } 
-            else if (piece.type === 'sinho' || piece.type === 'sinha') {
+            } else if (piece.type === 'sinho' || piece.type === 'sinha') {
                 const dirs = [[-1,-1],[-1,1],[1,-1],[1,1]];
                 dirs.forEach(([dr, dc]) => {
-                    let step = 1;
-                    while (addMoveIfValid(r + dr * step, c + dc * step)) step++;
+                    let s = 1;
+                    while (addMoveIfValid(r + dr * s, c + dc * s)) s++;
                 });
-            } 
-            else if (piece.type === 'indigena') {
+            } else if (piece.type === 'indigena') {
                 const dirs = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
                 dirs.forEach(([dr, dc]) => {
-                    let step = 1;
-                    while (addMoveIfValid(r + dr * step, c + dc * step)) step++;
+                    let s = 1;
+                    while (addMoveIfValid(r + dr * s, c + dc * s)) s++;
                 });
-            } 
-            else if (piece.type === 'jesuita') {
+            } else if (piece.type === 'jesuita') {
                 const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
                 dirs.forEach(([dr, dc]) => {
-                    let step = 1;
-                    while (addMoveIfValid(r + dr * step, c + dc * step)) step++;
+                    let s = 1;
+                    while (addMoveIfValid(r + dr * s, c + dc * s)) s++;
                 });
-            } 
-            else if (piece.type === 'bandeirante') {
+            } else if (piece.type === 'bandeirante') {
                 const jumps = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
                 jumps.forEach(([dr, dc]) => addMoveIfValid(r + dr, c + dc));
             }
@@ -908,50 +929,31 @@
             return moves;
         }
 
-        // --- EXECUÇÃO DE MOVIMENTO ---
         function executeMove(fromR, fromC, toR, toC, moveInfo, isLocalAction = true) {
             const sourceCell = board[fromR][fromC];
             const targetCell = board[toR][toC];
-
             const movingPiece = sourceCell.piece;
             const destPiece = targetCell.piece;
 
-            const playerTag = `P${movingPiece.currentOwner}`;
-            const coordStr = `${String.fromCharCode(65 + toC)}${8 - toR}`;
-
             sourceCell.piece = null;
 
-            if (moveInfo.action === 'convert') {
+            if (moveInfo.action === 'convert' || moveInfo.action === 'recover') {
                 destPiece.currentOwner = movingPiece.currentOwner;
                 sourceCell.piece = destPiece;
                 targetCell.piece = movingPiece;
-
                 playSound(600, 0.2, 'triangle');
-                addLog(`✝ Jesuíta (${playerTag}) dominou um ${PIECE_TYPES[destPiece.type].name} em ${coordStr}!`, `p${movingPiece.currentOwner}`);
-            } 
-            else if (moveInfo.action === 'recover') {
-                destPiece.currentOwner = movingPiece.currentOwner;
-                sourceCell.piece = destPiece;
-                targetCell.piece = movingPiece;
-
-                playSound(650, 0.2, 'triangle');
-                addLog(`🐎 Bandeirante (${playerTag}) recuperou o seu ${PIECE_TYPES[destPiece.type].name} em ${coordStr}!`, `p${movingPiece.currentOwner}`);
-            } 
-            else if (moveInfo.action === 'capture') {
+            } else if (moveInfo.action === 'capture') {
                 targetCell.piece = movingPiece;
                 playSound(300, 0.15, 'sawtooth');
-                addLog(`${PIECE_TYPES[movingPiece.type].name} (${playerTag}) eliminou ${PIECE_TYPES[destPiece.type].name} rival em ${coordStr}.`, `p${movingPiece.currentOwner}`);
-            } 
-            else {
+            } else {
                 targetCell.piece = movingPiece;
-                playSound(500, 0.08, 'sine');
+                playSound(520, 0.1, 'sine');
             }
 
             targetCell.territory = movingPiece.currentOwner;
 
-            // Transmitir jogada ao outro jogador se for uma ação local no modo online
-            if (isLocalAction && gameMode === 'online') {
-                sendMoveToPeer(fromR, fromC, toR, toC, moveInfo);
+            if (isLocalAction && gameMode === 'online' && conn && conn.open) {
+                conn.send({ type: 'move', fromR, fromC, toR, toC, moveInfo });
             }
 
             checkWinCondition();
@@ -961,9 +963,48 @@
                 updateUI();
 
                 if (gameMode === 'ai' && currentTurn === 2) {
-                    setTimeout(makeAiMove, 600);
+                    setTimeout(makeAiMove, 500);
                 }
             }
+        }
+
+        // --- INTELIGÊNCIA ARTIFICIAL (BOT) ---
+        function makeAiMove() {
+            if (gameOver || currentTurn !== 2) return;
+            const allMoves = [];
+
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    if (board[r][c].piece && board[r][c].piece.currentOwner === 2) {
+                        const moves = getValidMoves(r, c);
+                        moves.forEach(m => {
+                            allMoves.push({
+                                fromR: r, fromC: c, toR: m.r, toC: m.c, info: m,
+                                score: evaluateMove(m)
+                            });
+                        });
+                    }
+                }
+            }
+
+            if (allMoves.length > 0) {
+                allMoves.sort((a, b) => b.score - a.score);
+                const chosen = allMoves[0];
+                executeMove(chosen.fromR, chosen.fromC, chosen.toR, chosen.toC, chosen.info, true);
+                renderBoard();
+            }
+        }
+
+        function evaluateMove(moveInfo) {
+            let score = 0;
+            const target = board[moveInfo.r][moveInfo.c];
+            if (moveInfo.action === 'capture' && target.piece) {
+                if (target.piece.type === 'sinho' || target.piece.type === 'sinha') score += 100;
+                else score += 20;
+            }
+            if (target.territory === 1) score += 25;
+            if (moveInfo.action === 'convert' || moveInfo.action === 'recover') score += 40;
+            return score;
         }
 
         // --- CONDIÇÃO DE VITÓRIA ---
@@ -975,7 +1016,6 @@
             for (let r = 0; r < BOARD_SIZE; r++) {
                 for (let c = 0; c < BOARD_SIZE; c++) {
                     const cell = board[r][c];
-
                     if (cell.territory === 1) p1Territories++;
                     if (cell.territory === 2) p2Territories++;
 
@@ -1002,157 +1042,97 @@
             }
 
             if (p1Territories >= 33) {
-                triggerVictory(1, `Dominou ${p1Territories} dos 64 territórios!`);
+                triggerVictory(1, `Dominou ${p1Territories} territórios!`);
             } else if (p2Territories >= 33) {
-                triggerVictory(2, `Dominou ${p2Territories} dos 64 territórios!`);
+                triggerVictory(2, `Dominou ${p2Territories} territórios!`);
             }
         }
 
         function triggerVictory(winner, reason) {
             gameOver = true;
-            playSound(800, 0.4, 'sine');
+            playSound(800, 0.4);
             const winnerName = winner === 1 ? "Jogador 1 (Azul)" : (gameMode === 'ai' ? "Bot (IA)" : "Jogador 2 (Vermelho)");
             
-            document.getElementById('victoryTitle').textContent = `🏆 ${winnerName} Venceu!`;
-            document.getElementById('victoryDesc').textContent = reason;
-            
-            document.getElementById('victoryModal').classList.add('active');
-            addLog(`🏆 PARTIDA TERMINADA! ${winnerName} venceu: ${reason}`, 'special');
+            document.getElementById('victory-title').textContent = `🏆 ${winnerName} Venceu!`;
+            document.getElementById('victory-desc').textContent = reason;
+            document.getElementById('victory-overlay').style.display = 'flex';
         }
 
-        // --- BOT (IA) ---
-        function makeAiMove() {
-            if (gameOver || currentTurn !== 2) return;
-
-            const allMoves = [];
-
-            for (let r = 0; r < BOARD_SIZE; r++) {
-                for (let c = 0; c < BOARD_SIZE; c++) {
-                    if (board[r][c].piece && board[r][c].piece.currentOwner === 2) {
-                        const moves = getValidMoves(r, c);
-                        moves.forEach(m => {
-                            allMoves.push({
-                                fromR: r, fromC: c,
-                                toR: m.r, toC: m.c,
-                                info: m,
-                                score: evaluateMove(r, c, m.r, m.c, m)
-                            });
-                        });
-                    }
-                }
-            }
-
-            if (allMoves.length === 0) {
-                addLog("O Bot não tem movimentos disponíveis! Turno passado.", "p2");
-                currentTurn = 1;
-                updateUI();
-                return;
-            }
-
-            allMoves.sort((a, b) => b.score - a.score);
-            const bestScore = allMoves[0].score;
-            const topMoves = allMoves.filter(m => m.score >= bestScore - 5);
-            const chosenMove = topMoves[Math.floor(Math.random() * topMoves.length)];
-
-            executeMove(chosenMove.fromR, chosenMove.fromC, chosenMove.toR, chosenMove.toC, chosenMove.info, true);
-            renderBoard();
-        }
-
-        function evaluateMove(fromR, fromC, toR, toC, moveInfo) {
-            let score = 0;
-            const targetCell = board[toR][toC];
-
-            if (moveInfo.action === 'capture' && targetCell.piece) {
-                const type = targetCell.piece.type;
-                if (type === 'sinha' || type === 'sinho') score += 100;
-                else if (type === 'indigena' || type === 'jesuita') score += 30;
-                else if (type === 'bandeirante') score += 25;
-                else score += 15;
-            }
-
-            if (targetCell.territory === 0) score += 15;
-            if (targetCell.territory === 1) score += 25;
-
-            if (moveInfo.action === 'convert') score += 50;
-            if (moveInfo.action === 'recover') score += 45;
-
-            const distFromCenter = Math.abs(toR - 3.5) + Math.abs(toC - 3.5);
-            score += (10 - distFromCenter);
-
-            return score;
-        }
-
-        // --- ATUALIZAÇÃO DA INTERFACE ---
         function updateUI() {
-            let p1Territories = 0, p2Territories = 0;
-
+            let p1Count = 0, p2Count = 0;
             for (let r = 0; r < BOARD_SIZE; r++) {
                 for (let c = 0; c < BOARD_SIZE; c++) {
-                    if (board[r][c].territory === 1) p1Territories++;
-                    if (board[r][c].territory === 2) p2Territories++;
+                    if (board[r][c].territory === 1) p1Count++;
+                    if (board[r][c].territory === 2) p2Count++;
                 }
             }
+            document.getElementById('p1-score').textContent = p1Count;
+            document.getElementById('p2-score').textContent = p2Count;
 
-            document.getElementById('p1Score').textContent = `${p1Territories} / 64`;
-            document.getElementById('p2Score').textContent = `${p2Territories} / 64`;
-
-            document.getElementById('p1Bar').style.width = `${(p1Territories / 33) * 100}%`;
-            document.getElementById('p2Bar').style.width = `${(p2Territories / 33) * 100}%`;
-
-            const badge = document.getElementById('turnBadge');
-            const turnText = document.getElementById('turnText');
-
+            const statusText = document.getElementById('game-status-text');
             if (currentTurn === 1) {
-                badge.style.backgroundColor = 'var(--p1-light)';
-                turnText.textContent = gameMode === 'online' && myPlayerId === 2 ? "Vez do Adversário (Azul)" : "Vez do Jogador 1 (Azul)";
+                statusText.textContent = "Vez do Jogador 1 (Azul)";
             } else {
-                badge.style.backgroundColor = 'var(--p2-light)';
-                if (gameMode === 'ai') {
-                    turnText.textContent = "Vez do Bot (IA)...";
-                } else if (gameMode === 'online' && myPlayerId === 1) {
-                    turnText.textContent = "Vez do Adversário (Vermelho)";
-                } else {
-                    turnText.textContent = "Vez do Jogador 2 (Vermelho)";
-                }
+                statusText.textContent = gameMode === 'ai' ? "Vez do Bot (IA)..." : "Vez do Jogador 2 (Vermelho)";
             }
         }
 
-        function addLog(text, styleClass = '') {
-            const logBox = document.getElementById('logBox');
-            const entry = document.createElement('div');
-            entry.className = `log-entry ${styleClass}`;
-            entry.textContent = text;
-            logBox.appendChild(entry);
-            logBox.scrollTop = logBox.scrollHeight;
+        // --- MULTIPLAYER ONLINE (WEBRTC) ---
+        function setupPeer() {
+            if (peer) return;
+            const randomId = Math.floor(100000 + Math.random() * 900000).toString();
+            peer = new Peer(randomId);
+
+            peer.on('open', (id) => {
+                document.getElementById('online-status').textContent = `ID da Sala: ${id}`;
+            });
+
+            peer.on('connection', (connection) => {
+                conn = connection;
+                myPlayerId = 1;
+                setupConnectionListeners();
+                document.getElementById('online-status').textContent = "Adversário conectado!";
+                initGame();
+            });
         }
 
-        function setGameMode(mode) {
-            gameMode = mode;
-            document.getElementById('btnPvp').classList.toggle('active', mode === 'pvp');
-            document.getElementById('btnOnline').classList.toggle('active', mode === 'online');
-            document.getElementById('btnAi').classList.toggle('active', mode === 'ai');
+        function createOnlineRoom() {
+            setupPeer();
+            if (peer && peer.id) {
+                prompt("Envie este código para o seu oponente:", peer.id);
+            }
+        }
+
+        function joinOnlineRoom() {
+            const code = document.getElementById('room-code-input').value.trim();
+            if (!code) return alert("Digite um código válido");
             
-            document.getElementById('onlinePanel').style.display = mode === 'online' ? 'flex' : 'none';
-
-            if (mode === 'online') {
-                setupPeer();
-            }
-
-            resetGame();
+            peer = new Peer();
+            peer.on('open', () => {
+                conn = peer.connect(code);
+                myPlayerId = 2;
+                setupConnectionListeners();
+                document.getElementById('online-status').textContent = "Conectado à sala!";
+                initGame();
+            });
         }
 
-        function resetGame() {
-            if (gameMode === 'online' && conn && conn.open) {
-                conn.send({ type: 'reset' });
-            }
-            initGame();
+        function setupConnectionListeners() {
+            conn.on('data', (data) => {
+                if (data.type === 'move') {
+                    executeMove(data.fromR, data.fromC, data.toR, data.toC, data.moveInfo, false);
+                    renderBoard();
+                }
+            });
         }
 
-        function openRulesModal() { document.getElementById('rulesModal').classList.add('active'); }
-        function closeRulesModal() { document.getElementById('rulesModal').classList.remove('active'); }
-        function closeVictoryModal() { document.getElementById('victoryModal').classList.remove('active'); }
-
-        window.onload = () => { initGame(); };
+        // --- MODO COMPETIÇÃO ---
+        function startCompetitiveMatch() {
+            const betVal = document.getElementById('bet-amount').value;
+            alert(`Buscando adversário para partida no valor de R$ ${betVal}...`);
+            switchScreen(1);
+            startSelectedMode('online');
+        }
     </script>
 </body>
 </html>
