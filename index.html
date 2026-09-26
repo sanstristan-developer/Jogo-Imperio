@@ -225,7 +225,7 @@
             margin-bottom: 8px;
         }
 
-        /* TABULEIRO MOBILE ESTILO INDEX 2 */
+        /* TABULEIRO MOBILE */
         .board-container {
             display: flex;
             justify-content: center;
@@ -259,12 +259,19 @@
         .square.territory-p1::after { content: ''; position: absolute; inset: 0; background-color: var(--p1-bg); border: 2px solid var(--p1-light); pointer-events: none; }
         .square.territory-p2::after { content: ''; position: absolute; inset: 0; background-color: var(--p2-bg); border: 2px solid var(--p2-light); pointer-events: none; }
 
-        .square.selected { outline: 2px solid #f6e05e; outline-offset: -2px; z-index: 3; }
-        .square.valid-move::before { content: ''; position: absolute; width: 14px; height: 14px; background-color: rgba(72, 187, 120, 0.8); border-radius: 50%; z-index: 3; }
-        .square.valid-capture::before { content: ''; position: absolute; inset: 0; border: 2px solid #e53e3e; background-color: rgba(229, 62, 62, 0.3); z-index: 3; }
-        .square.valid-convert::before { content: ''; position: absolute; inset: 0; border: 2px solid #d4af37; background-color: rgba(212, 175, 55, 0.3); z-index: 3; }
+        .square.selected { outline: 2px solid var(--accent-gold); outline-offset: -2px; z-index: 3; }
+        
+        /* Jogador 1 (Azul) - Bolinhas e marcações roxas */
+        body[data-turn="1"] .square.valid-move::before { content: ''; position: absolute; width: 14px; height: 14px; background-color: rgba(128, 0, 128, 0.8); border-radius: 50%; z-index: 3; }
+        body[data-turn="1"] .square.valid-capture::before { content: ''; position: absolute; inset: 0; border: 2px solid #800080; background-color: rgba(128, 0, 128, 0.3); z-index: 3; }
+        body[data-turn="1"] .square.valid-convert::before { content: ''; position: absolute; inset: 0; border: 2px solid #800080; background-color: rgba(128, 0, 128, 0.3); z-index: 3; }
 
-        /* Peça com nome visível (Igual Index 2) */
+        /* Jogador 2 (Vermelho) - Bolinhas e marcações marrons */
+        body[data-turn="2"] .square.valid-move::before { content: ''; position: absolute; width: 14px; height: 14px; background-color: rgba(139, 69, 19, 0.85); border-radius: 50%; z-index: 3; }
+        body[data-turn="2"] .square.valid-capture::before { content: ''; position: absolute; inset: 0; border: 2px solid #8b4513; background-color: rgba(139, 69, 19, 0.35); z-index: 3; }
+        body[data-turn="2"] .square.valid-convert::before { content: ''; position: absolute; inset: 0; border: 2px solid #8b4513; background-color: rgba(139, 69, 19, 0.35); z-index: 3; }
+
+        /* Peça com nome visível */
         .piece {
             z-index: 2;
             position: relative;
@@ -404,7 +411,7 @@
         }
     </style>
 </head>
-<body>
+<body data-turn="1">
 
     <!-- TELA 0: AUTENTICAÇÃO E PERFIL INICIAL -->
     <div id="auth-overlay">
@@ -521,7 +528,7 @@
 
                 </div>
 
-                <!-- ÁREA DE JOGO (TABULEIRO E CONTROLES) - EXIBIDA AO CLICAR EM JOGAR -->
+                <!-- ÁREA DE JOGO (TABULEIRO E CONTROLES) -->
                 <div id="active-game-area" style="display: none; width: 100%; max-width: 420px; flex-direction: column; align-items: center;">
                     <button class="btn btn-secondary" onclick="backToModesMenu()" style="margin-bottom: 10px;">← Voltar ao Menu</button>
 
@@ -535,7 +542,7 @@
                         </div>
                     </div>
 
-                    <!-- Tabuleiro principal com nomes visíveis nas peças -->
+                    <!-- Tabuleiro principal -->
                     <div class="board-container">
                         <div id="main-board" class="board"></div>
                     </div>
@@ -625,7 +632,7 @@
         let conn = null;
         let myPlayerId = 1;
 
-        // Definição das Peças (Incluindo Nomes Visíveis)
+        // Definição das Peças
         const PIECE_TYPES = {
             escravo:     { name: "Escravo",     symbol: "♟" },
             indigena:    { name: "Indígena",    symbol: "🏹" },
@@ -863,7 +870,6 @@
                         const p = cell.piece;
                         pieceEl.className = `piece p${p.currentOwner}`;
                         
-                        // Símbolo e Nome da Peça Visível (Estilo Index 2)
                         pieceEl.innerHTML = `<span>${PIECE_TYPES[p.type].symbol}</span>`;
 
                         const labelEl = document.createElement('span');
@@ -1114,6 +1120,9 @@
             }
             document.getElementById('p1-score').textContent = p1Count;
             document.getElementById('p2-score').textContent = p2Count;
+
+            // Atualiza o atributo do body para alternar as cores dos caminhos via CSS
+            document.body.setAttribute('data-turn', currentTurn);
 
             const statusText = document.getElementById('game-status-text');
             if (currentTurn === 1) {
