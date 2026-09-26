@@ -225,7 +225,7 @@
             margin-bottom: 8px;
         }
 
-        /* TABULEIRO MOBILE */
+        /* TABULEIRO MOBILE ESTILO INDEX 2 */
         .board-container {
             display: flex;
             justify-content: center;
@@ -235,12 +235,9 @@
 
         .board {
             display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            grid-template-rows: repeat(8, 1fr);
-            width: 90vw;
-            height: 90vw;
-            max-width: 360px;
-            max-height: 360px;
+            grid-template-columns: repeat(8, 44px);
+            grid-template-rows: repeat(8, 44px);
+            gap: 1px;
             background-color: #000;
             border: 2px solid var(--accent-gold);
             border-radius: 6px;
@@ -252,22 +249,46 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.3rem;
+            font-size: 1.5rem;
+            cursor: pointer;
         }
 
-        .square.light { background-color: var(--tile-light); }
-        .square.dark { background-color: var(--tile-dark); }
+        .square.light { background-color: var(--tile-light); color: #333; }
+        .square.dark { background-color: var(--tile-dark); color: #222; }
+        
         .square.territory-p1::after { content: ''; position: absolute; inset: 0; background-color: var(--p1-bg); border: 2px solid var(--p1-light); pointer-events: none; }
         .square.territory-p2::after { content: ''; position: absolute; inset: 0; background-color: var(--p2-bg); border: 2px solid var(--p2-light); pointer-events: none; }
 
         .square.selected { outline: 2px solid #f6e05e; outline-offset: -2px; z-index: 3; }
-        .square.valid-move::before { content: ''; position: absolute; width: 12px; height: 12px; background-color: rgba(72, 187, 120, 0.8); border-radius: 50%; z-index: 3; }
+        .square.valid-move::before { content: ''; position: absolute; width: 14px; height: 14px; background-color: rgba(72, 187, 120, 0.8); border-radius: 50%; z-index: 3; }
         .square.valid-capture::before { content: ''; position: absolute; inset: 0; border: 2px solid #e53e3e; background-color: rgba(229, 62, 62, 0.3); z-index: 3; }
         .square.valid-convert::before { content: ''; position: absolute; inset: 0; border: 2px solid #d4af37; background-color: rgba(212, 175, 55, 0.3); z-index: 3; }
 
-        .piece { z-index: 2; display: flex; align-items: center; justify-content: center; position: relative; }
+        /* Peça com nome visível (Igual Index 2) */
+        .piece {
+            z-index: 2;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
         .piece.p1 { color: #1a365d; filter: drop-shadow(0 1px 2px rgba(255,255,255,0.8)); }
         .piece.p2 { color: #742a2a; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.8)); }
+
+        .piece-label {
+            position: absolute;
+            top: -6px;
+            font-size: 0.45rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 0 2px;
+            border-radius: 2px;
+            background: rgba(0,0,0,0.75);
+            color: #fff;
+            white-space: nowrap;
+        }
 
         .converted-tag {
             position: absolute;
@@ -514,7 +535,7 @@
                         </div>
                     </div>
 
-                    <!-- Tabuleiro principal -->
+                    <!-- Tabuleiro principal com nomes visíveis nas peças -->
                     <div class="board-container">
                         <div id="main-board" class="board"></div>
                     </div>
@@ -604,7 +625,7 @@
         let conn = null;
         let myPlayerId = 1;
 
-        // Definição das Peças
+        // Definição das Peças (Incluindo Nomes Visíveis)
         const PIECE_TYPES = {
             escravo:     { name: "Escravo",     symbol: "♟" },
             indigena:    { name: "Indígena",    symbol: "🏹" },
@@ -757,9 +778,7 @@
         }
 
         function backToModesMenu() {
-            // Desconecta e limpa o estado online se estiver ativo
             disconnectOnlineSession();
-
             document.getElementById('active-game-area').style.display = 'none';
             document.getElementById('game-modes-menu').style.display = 'flex';
         }
@@ -775,13 +794,9 @@
             }
             myPlayerId = 1;
             const statusEl = document.getElementById('online-status');
-            if (statusEl) {
-                statusEl.textContent = "Desconectado. Crie ou entre numa sala.";
-            }
+            if (statusEl) statusEl.textContent = "Desconectado. Crie ou entre numa sala.";
             const roomInput = document.getElementById('room-code-input');
-            if (roomInput) {
-                roomInput.value = "";
-            }
+            if (roomInput) roomInput.value = "";
         }
 
         // --- LÓGICA DO JOGO IMPÉRIO ---
@@ -847,7 +862,14 @@
                         const pieceEl = document.createElement('div');
                         const p = cell.piece;
                         pieceEl.className = `piece p${p.currentOwner}`;
-                        pieceEl.textContent = PIECE_TYPES[p.type].symbol;
+                        
+                        // Símbolo e Nome da Peça Visível (Estilo Index 2)
+                        pieceEl.innerHTML = `<span>${PIECE_TYPES[p.type].symbol}</span>`;
+
+                        const labelEl = document.createElement('span');
+                        labelEl.className = 'piece-label';
+                        labelEl.textContent = PIECE_TYPES[p.type].name;
+                        pieceEl.appendChild(labelEl);
 
                         if (p.currentOwner !== p.originalOwner) {
                             const tagEl = document.createElement('span');
