@@ -317,6 +317,85 @@
             padding-bottom: 6px;
         }
 
+        /* CARD DE EXPLICAÇÃO DO MODO COMPETIÇÃO (EXTREMIDADE) */
+        .comp-info-card {
+            background: linear-gradient(135deg, #2a2118, #1a1410);
+            border: 2px dashed var(--accent-gold);
+            border-radius: 10px;
+            padding: 10px 14px;
+            width: 100%;
+            max-width: 420px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .comp-info-card:hover {
+            transform: scale(1.01);
+            border-color: #fff;
+        }
+
+        /* RANKING COMPETITIVO (ALTURA EXATA PARA 3 PERFIS) */
+        .ranking-container {
+            max-height: 200px; /* Altura suficiente para exatamente 3 itens visíveis */
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 4px;
+            margin-top: 10px;
+        }
+
+        /* Estilização da barra de rolagem interna do ranking */
+        .ranking-container::-webkit-scrollbar {
+            width: 5px;
+        }
+        .ranking-container::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+            border-radius: 4px;
+        }
+        .ranking-container::-webkit-scrollbar-thumb {
+            background: var(--accent-gold);
+            border-radius: 4px;
+        }
+
+        .ranking-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #19130f;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 8px 12px;
+            border-radius: 8px;
+            min-height: 56px;
+        }
+
+        .ranking-user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ranking-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--accent-gold);
+        }
+
+        .ranking-position {
+            font-weight: bold;
+            color: var(--accent-gold);
+            font-size: 0.95rem;
+            width: 24px;
+            text-align: center;
+        }
+
         /* BOTÕES GERAIS */
         .btn {
             background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dark));
@@ -345,7 +424,7 @@
         }
 
         /* MODAL E TUTORIAL OVERLAY */
-        #tutorial-overlay, #victory-overlay {
+        #tutorial-overlay, #victory-overlay, #more-avatars-modal, #comp-explanation-modal {
             position: fixed;
             inset: 0;
             background: rgba(0,0,0,0.9);
@@ -372,21 +451,53 @@
             display: flex;
             gap: 10px;
             justify-content: center;
+            align-items: center;
             margin: 15px 0;
         }
 
         .avatar-option {
-            font-size: 2rem;
-            padding: 10px;
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
             border: 2px solid transparent;
             border-radius: 50%;
             background: #111;
             cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
         }
 
         .avatar-option.selected {
             border-color: var(--accent-gold);
-            background: rgba(212, 175, 55, 0.2);
+            transform: scale(1.05);
+        }
+
+        .avatar-add-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent-gold);
+            color: #111;
+            border: none;
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .avatar-add-btn:hover {
+            background: #fff;
+            transform: scale(1.1);
+        }
+
+        .avatars-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            justify-items: center;
+            margin: 15px 0;
         }
 
         .bet-selector {
@@ -397,6 +508,86 @@
             padding: 10px;
             border-radius: 8px;
             margin: 10px 0;
+        }
+
+        /* ESTILOS DA SEÇÃO DE MOEDAS E LOJA */
+        .wallet-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 15px;
+            padding-top: 12px;
+            border-top: 1px dashed rgba(212, 175, 55, 0.3);
+            position: relative;
+        }
+
+        .chest-display {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-bottom: 4px;
+        }
+
+        .chest-display:active {
+            transform: scale(0.95);
+        }
+
+        .wallet-info-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--accent-gold);
+        }
+
+        .add-coins-btn {
+            background: var(--accent-gold);
+            color: #111;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            font-weight: bold;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+            margin-left: 6px;
+        }
+
+        .add-coins-btn:hover {
+            background: #fff;
+            transform: scale(1.1);
+        }
+
+        /* TELA DE COMPRA DE MOEDAS */
+        .shop-item {
+            background: #111;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .shop-item-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-align: left;
+        }
+
+        .shop-item-info span {
+            font-size: 1.5rem;
         }
     </style>
 </head>
@@ -433,6 +624,29 @@
         </div>
     </div>
 
+    <!-- MODAL DE EXPLICAÇÃO DO MODO COMPETIÇÃO -->
+    <div id="comp-explanation-modal">
+        <div class="tutorial-box">
+            <h2 style="color: var(--accent-gold); margin-bottom: 10px;">Modo Competição</h2>
+            <p style="font-size: 0.9rem; line-height: 1.5; text-align: left; color: var(--text-dim); margin-bottom: 15px;">
+                Jogadores podem competir entre si, em disputas com competidores aleatórios, que apostam um valor em moedas virtuais, que foram compradas na loja do jogo, mas essas moedas são apenas para fins de entretenimento, não podendo ser sacadas depois de compradas, ou mesmo depois de recebidas como recompensa decorrendo de uma vitória em uma competição.
+            </p>
+            <button class="btn" onclick="closeCompExplanationModal()">ENTENDI</button>
+        </div>
+    </div>
+
+    <!-- MODAL DE MAIS AVATARES -->
+    <div id="more-avatars-modal">
+        <div class="tutorial-box">
+            <h2 style="color: var(--accent-gold); margin-bottom: 10px;">Escolher Ícone de Perfil</h2>
+            <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 15px;">Selecione um dos avatares:</p>
+            <div class="avatars-grid" id="more-avatars-grid">
+                <!-- Preenchido via script -->
+            </div>
+            <button class="btn btn-secondary" style="margin-top: 10px;" onclick="closeMoreAvatarsModal()">Fechar</button>
+        </div>
+    </div>
+
     <!-- MODAL DE VITÓRIA -->
     <div id="victory-overlay">
         <div class="tutorial-box" style="text-align: center;">
@@ -442,7 +656,7 @@
         </div>
     </div>
 
-    <!-- ESTRUTURA PRINCIPAL COM SWIPE (3 TELAS) -->
+    <!-- ESTRUTURA PRINCIPAL COM SWIPE (3 TELAS + LOJA DE MOEDAS) -->
     <div id="app-viewport">
         <div id="screens-wrapper">
             
@@ -451,17 +665,26 @@
                 <div class="card">
                     <h2>Meu Perfil</h2>
                     <div style="text-align: center; margin-bottom: 15px;">
-                        <div id="profile-avatar-display" style="font-size: 3rem;">👑</div>
+                        <img id="profile-avatar-display" src="001-perfil.png" alt="Avatar Atual" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-gold); margin-bottom: 8px;">
                         <h3 id="profile-name-display">Imperador</h3>
-                        <p style="color: var(--text-dim); font-size: 0.8rem;">Nível 1 • Conta Vinculada Google</p>
+                        <p style="color: var(--text-dim); font-size: 0.8rem;">Conta Vinculada ao Google</p>
                     </div>
 
-                    <label style="font-size: 0.85rem; color: var(--text-dim);">Personalize seu Ícone:</label>
+                    <label style="font-size: 0.85rem; color: var(--text-dim);">Escolha o seu Ícone:</label>
                     <div class="avatar-selector">
-                        <span class="avatar-option selected" onclick="selectAvatar('👑', this)">👑</span>
-                        <span class="avatar-option" onclick="selectAvatar('🦁', this)">🦁</span>
-                        <span class="avatar-option" onclick="selectAvatar('⚔️', this)">⚔️</span>
-                        <span class="avatar-option" onclick="selectAvatar('🛡️', this)">🛡️</span>
+                        <img src="001-perfil.png" class="avatar-option selected" onclick="selectAvatar('001-perfil.png', this)">
+                        <img src="002-perfil.png" class="avatar-option" onclick="selectAvatar('002-perfil.png', this)">
+                        <img src="003-perfil.png" class="avatar-option" onclick="selectAvatar('003-perfil.png', this)">
+                        <button class="avatar-add-btn" onclick="openMoreAvatarsModal()" title="Mais Avatares">+</button>
+                    </div>
+
+                    <!-- Seção do Baú e Moedas -->
+                    <div class="wallet-container">
+                        <img src="bau-vazio.png" alt="Baú Vazio" class="chest-display" id="profile-chest-icon" onclick="openCoinShop()">
+                        <div class="wallet-info-row">
+                            <span id="profile-coins-count">0</span> moedas
+                            <button class="add-coins-btn" onclick="openCoinShop()" title="Comprar Moedas">+</button>
+                        </div>
                     </div>
                 </div>
 
@@ -474,9 +697,54 @@
                 </div>
             </div>
 
-            <!-- TELA DO MEIO: PRINCIPAL (SELEÇÃO DE MODOS DE JOGO) -->
+            <!-- TELA DO MEIO: PRINCIPAL (SELEÇÃO DE MODOS DE JOGO / LOJA DE MOEDAS) -->
             <div class="screen" id="screen-main">
                 
+                <!-- TELA DE COMPRA DE MOEDAS (INICIALMENTE OCULTA) -->
+                <div id="coin-shop-menu" style="display: none; width: 100%; max-width: 380px; flex-direction: column; align-items: center;">
+                    <div class="card" style="text-align: center;">
+                        <h2>Loja de Moedas 🪙</h2>
+                        <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 15px;">
+                            Adquira moedas para apostas e conteúdos exclusivos.
+                        </p>
+
+                        <div class="shop-item">
+                            <div class="shop-item-info">
+                                <span>🪙</span>
+                                <div>
+                                    <div style="font-weight: bold; color: var(--accent-gold);">100 Moedas</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-dim);">Pacote Iniciante</div>
+                                </div>
+                            </div>
+                            <button class="btn" style="width: auto; padding: 8px 12px; margin: 0;" onclick="buyCoins(100, 1.00)">R$ 1,00</button>
+                        </div>
+
+                        <div class="shop-item">
+                            <div class="shop-item-info">
+                                <span>💰</span>
+                                <div>
+                                    <div style="font-weight: bold; color: var(--accent-gold);">1.000 Moedas</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-dim);">Pacote Popular</div>
+                                </div>
+                            </div>
+                            <button class="btn" style="width: auto; padding: 8px 12px; margin: 0;" onclick="buyCoins(1000, 5.00)">R$ 5,00</button>
+                        </div>
+
+                        <div class="shop-item">
+                            <div class="shop-item-info">
+                                <span>👑</span>
+                                <div>
+                                    <div style="font-weight: bold; color: var(--accent-gold);">10.000 Moedas</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-dim);">Pacote Imperador</div>
+                                </div>
+                            </div>
+                            <button class="btn" style="width: auto; padding: 8px 12px; margin: 0;" onclick="buyCoins(10000, 10.00)">R$ 10,00</button>
+                        </div>
+
+                        <button class="btn btn-secondary" style="margin-top: 15px;" onclick="backToMainMenu()">← Voltar ao Menu</button>
+                    </div>
+                </div>
+
                 <!-- MENU PRINCIPAL DE SELEÇÃO DE MODOS DE JOGO -->
                 <div id="game-modes-menu" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
                     
@@ -558,35 +826,103 @@
 
             <!-- TELA DA DIREITA: MODO COMPETIÇÃO (APOSTAS) -->
             <div class="screen" id="screen-competition">
+                
+                <!-- CARD PEQUENO NA EXTREMIDADE PARA EXPLICAÇÃO -->
+                <div class="comp-info-card" onclick="openCompExplanationModal()">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.3rem;">ℹ️</span>
+                        <div>
+                            <div style="font-size: 0.85rem; font-weight: bold; color: var(--accent-gold);">Modo Competição</div>
+                            <div style="font-size: 0.72rem; color: var(--text-dim);">Clique para ver como funciona</div>
+                        </div>
+                    </div>
+                    <span style="font-size: 0.9rem; color: var(--accent-gold);">▶</span>
+                </div>
+
                 <div class="card">
                     <h2>Modo Competição 🏆</h2>
                     <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 10px;">
-                        Dispute partidas valendo dinheiro real com taxa garantida e sistema seguro.
+                        Dispute partidas com competidores aleatórios apostando moedas virtuais.
                     </p>
 
                     <div class="bet-selector">
                         <span style="font-size: 0.9rem;">Valor da Aposta:</span>
                         <select id="bet-amount" style="padding: 8px; border-radius: 6px; background: #222; color: var(--accent-gold); font-weight: bold; border: 1px solid var(--accent-gold);">
-                            <option value="0.10">R$ 0,10</option>
-                            <option value="0.25">R$ 0,25</option>
-                            <option value="0.50">R$ 0,50</option>
-                            <option value="1.00">R$ 1,00</option>
+                            <option value="10">10 moedas</option>
+                            <option value="100">100 moedas</option>
+                            <option value="1000">1.000 moedas</option>
                         </select>
                     </div>
 
                     <button class="btn" onclick="startCompetitiveMatch()">ENCONTRAR ADVERSÁRIO</button>
-                </div>
 
-                <div class="card">
-                    <h2>Instruções e Regras</h2>
-                    <ul style="font-size: 0.8rem; color: var(--text-dim); padding-left: 18px; line-height: 1.5;">
-                        <li><strong>Valores permitidos:</strong> Mínimo R$ 0,10 / Máximo R$ 1,00 por partida.</li>
-                        <li><strong>Taxa da Plataforma:</strong> 10% sobre o prêmio total da mesa.</li>
-                        <li><strong>Condição de Vitória:</strong> 33 territórios dominados ou eliminar Sinhô e Sinhá.</li>
-                        <li><strong>Peças Especiais:</strong> Jesuítas convertem peças e Bandeirantes recuperam as suas.</li>
-                    </ul>
+                    <!-- RANKING DE JOGADORES COMPETITIVOS (LOCALIZADO ABAIXO DO BOTÃO) -->
+                    <div style="margin-top: 15px;">
+                        <h3 style="font-size: 0.95rem; color: var(--accent-gold); margin-bottom: 8px;">Top Competidores</h3>
+                        <div class="ranking-container">
+                            <div class="ranking-item">
+                                <div class="ranking-user-info">
+                                    <span class="ranking-position">1º</span>
+                                    <img src="001-perfil.png" class="ranking-avatar" alt="Avatar">
+                                    <div>
+                                        <div style="font-size: 0.85rem; font-weight: bold;">Dom Pedro</div>
+                                        <div style="font-size: 0.7rem; color: var(--text-dim);">🪙 25.400 moedas</div>
+                                    </div>
+                                </div>
+                                <span style="font-size: 0.8rem; color: #48bb78; font-weight: bold;">142 V</span>
+                            </div>
+
+                            <div class="ranking-item">
+                                <div class="ranking-user-info">
+                                    <span class="ranking-position">2º</span>
+                                    <img src="002-perfil.png" class="ranking-avatar" alt="Avatar">
+                                    <div>
+                                        <div style="font-size: 0.85rem; font-weight: bold;">Barão de Mauá</div>
+                                        <div style="font-size: 0.7rem; color: var(--text-dim);">🪙 18.200 moedas</div>
+                                    </div>
+                                </div>
+                                <span style="font-size: 0.8rem; color: #48bb78; font-weight: bold;">115 V</span>
+                            </div>
+
+                            <div class="ranking-item">
+                                <div class="ranking-user-info">
+                                    <span class="ranking-position">3º</span>
+                                    <img src="003-perfil.png" class="ranking-avatar" alt="Avatar">
+                                    <div>
+                                        <div style="font-size: 0.85rem; font-weight: bold;">Duque de Caxias</div>
+                                        <div style="font-size: 0.7rem; color: var(--text-dim);">🪙 15.900 moedas</div>
+                                    </div>
+                                </div>
+                                <span style="font-size: 0.8rem; color: #48bb78; font-weight: bold;">98 V</span>
+                            </div>
+
+                            <div class="ranking-item">
+                                <div class="ranking-user-info">
+                                    <span class="ranking-position">4º</span>
+                                    <img src="004-perfil.png" class="ranking-avatar" alt="Avatar">
+                                    <div>
+                                        <div style="font-size: 0.85rem; font-weight: bold;">Tiradentes</div>
+                                        <div style="font-size: 0.7rem; color: var(--text-dim);">🪙 12.500 moedas</div>
+                                    </div>
+                                </div>
+                                <span style="font-size: 0.8rem; color: #48bb78; font-weight: bold;">84 V</span>
+                            </div>
+
+                            <div class="ranking-item">
+                                <div class="ranking-user-info">
+                                    <span class="ranking-position">5º</span>
+                                    <img src="005-perfil.png" class="ranking-avatar" alt="Avatar">
+                                    <div>
+                                        <div style="font-size: 0.85rem; font-weight: bold;">Marquês de Pombal</div>
+                                        <div style="font-size: 0.7rem; color: var(--text-dim);">🪙 10.100 moedas</div>
+                                    </div>
+                                </div>
+                                <span style="font-size: 0.8rem; color: #48bb78; font-weight: bold;">72 V</span>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
-            </div>
 
         </div>
     </div>
@@ -644,17 +980,9 @@
     async function loginGoogle() { 
         try { 
             const result = await signInWithPopup(auth, googleProvider); 
- 
             const user = result.user; 
- 
             console.log("Usuário conectado:", user); 
-            console.log("UID:", user.uid); 
-            console.log("Nome:", user.displayName); 
-            console.log("E-mail:", user.email); 
-            console.log("Foto:", user.photoURL); 
- 
             alert(`Login realizado com sucesso!\nBem-vindo, ${user.displayName || "Imperador"}!`); 
- 
         } catch (error) { 
             console.error("Erro no login Google:", error); 
             alert("Não foi possível entrar com o Google."); 
@@ -662,34 +990,40 @@
     }
 
     window.loginGoogle = loginGoogle;
-
-    console.log("Firebase conectado!");
 </script>
 
     <script>
         // --- ESTADO GLOBAL DA APLICAÇÃO ---
         let currentScreenIndex = 1; // 0: Perfil, 1: Principal, 2: Competição
         let soundEnabled = true;
-        let selectedAvatar = '👑';
+        let selectedAvatar = '001-perfil.png';
         let playerProfileName = "Imperador";
+        let playerCoins = 0; // Saldo de moedas do jogador
+
+        // Lista completa de avatares disponíveis na pasta
+        const allAvailableAvatars = [
+            '001-perfil.png',
+            '002-perfil.png',
+            '003-perfil.png',
+            '004-perfil.png',
+            '005-perfil.png'
+        ];
 
         // Estado do Jogo
         const BOARD_SIZE = 8;
         let board = [];
-        let squareElements = []; // Cache dos elementos DOM para otimização de clique
+        let squareElements = [];
         let currentTurn = 1; 
         let selectedSquare = null;
         let validMoves = [];
-        let gameMode = 'pvp'; // 'pvp', 'ai', 'online'
-        let aiDifficulty = 'medium'; // 'easy', 'medium', 'hard'
+        let gameMode = 'pvp';
+        let aiDifficulty = 'medium';
         let gameOver = false;
 
-        // PeerJS (Online)
         let peer = null;
         let conn = null;
         let myPlayerId = 1;
 
-        // Definição das Peças
         const PIECE_TYPES = {
             escravo:     { name: "Escravo",     symbol: "♟" },
             indigena:    { name: "Indígena",    symbol: "🏹" },
@@ -699,7 +1033,6 @@
             bandeirante: { name: "Bandeirante", symbol: "🐎" }
         };
 
-        // --- AUDIO SINTETIZADO ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(freq, duration = 0.1, type = 'sine') {
             if (!soundEnabled) return;
@@ -718,7 +1051,80 @@
             } catch (e) {}
         }
 
-        // --- SISTEMA DE GESTOS SWIPE PARA NAVEGAÇÃO ---
+        // --- ATUALIZAÇÃO DA INTERFACE DO BAÚ DE MOEDAS ---
+        function updateWalletUI() {
+            const chestEl = document.getElementById('profile-chest-icon');
+            const coinsCountEl = document.getElementById('profile-coins-count');
+            
+            coinsCountEl.textContent = playerCoins.toLocaleString('pt-BR');
+
+            if (playerCoins > 0) {
+                chestEl.src = 'bau-cheio.png';
+                chestEl.title = "Baú com Moedas";
+                chestEl.alt = "Baú Cheio";
+            } else {
+                chestEl.src = 'bau-vazio.png';
+                chestEl.title = "Baú Vazio";
+                chestEl.alt = "Baú Vazio";
+            }
+        }
+
+        // --- SISTEMA DE SELEÇÃO DE AVATAR E MODAL DE MAIS AVATARES ---
+        function selectAvatar(filename, el) {
+            selectedAvatar = filename;
+            document.querySelectorAll('.avatar-option').forEach(opt => opt.classList.remove('selected'));
+            if (el) el.classList.add('selected');
+            document.getElementById('profile-avatar-display').src = filename;
+            closeMoreAvatarsModal();
+        }
+
+        function openMoreAvatarsModal() {
+            const grid = document.getElementById('more-avatars-grid');
+            grid.innerHTML = '';
+            
+            allAvailableAvatars.forEach(filename => {
+                const img = document.createElement('img');
+                img.src = filename;
+                img.className = 'avatar-option';
+                if (selectedAvatar === filename) img.classList.add('selected');
+                img.onclick = () => selectAvatar(filename, img);
+                grid.appendChild(img);
+            });
+
+            document.getElementById('more-avatars-modal').style.display = 'flex';
+        }
+
+        function closeMoreAvatarsModal() {
+            document.getElementById('more-avatars-modal').style.display = 'none';
+        }
+
+        // --- MODAL DE EXPLICAÇÃO DO MODO COMPETIÇÃO ---
+        function openCompExplanationModal() {
+            document.getElementById('comp-explanation-modal').style.display = 'flex';
+        }
+
+        function closeCompExplanationModal() {
+            document.getElementById('comp-explanation-modal').style.display = 'none';
+        }
+
+        // --- SISTEMA DE NAVEGAÇÃO DA LOJA DE MOEDAS ---
+        function openCoinShop() {
+            switchScreen(1); // Vai para a tela central
+            document.getElementById('game-modes-menu').style.display = 'none';
+            document.getElementById('bot-difficulty-menu').style.display = 'none';
+            document.getElementById('active-game-area').style.display = 'none';
+            document.getElementById('coin-shop-menu').style.display = 'flex';
+        }
+
+        function buyCoins(amount, priceReal) {
+            playerCoins += amount;
+            updateWalletUI();
+            playSound(700, 0.2, 'triangle');
+            alert(`Compra de R$ ${priceReal.toFixed(2).replace('.', ',')} realizada com sucesso!\nVocê recebeu ${amount.toLocaleString('pt-BR')} moedas.`);
+            backToMainMenu();
+        }
+
+        // --- GESTOS SWIPE ---
         let touchStartX = 0;
         let touchEndX = 0;
 
@@ -759,14 +1165,8 @@
             document.getElementById('profile-name-display').textContent = playerProfileName;
             
             document.getElementById('auth-overlay').style.display = 'none';
+            updateWalletUI();
             startTutorial();
-        }
-
-        function selectAvatar(symbol, el) {
-            selectedAvatar = symbol;
-            document.querySelectorAll('.avatar-option').forEach(opt => opt.classList.remove('selected'));
-            el.classList.add('selected');
-            document.getElementById('profile-avatar-display').textContent = symbol;
         }
 
         function toggleSound() {
@@ -774,7 +1174,7 @@
             document.getElementById('sound-toggle').textContent = `Som: ${soundEnabled ? 'ATIVADO' : 'DESATIVADO'}`;
         }
 
-        // --- TUTORIAL INTERATIVO ---
+        // --- TUTORIAL ---
         let currentTutStep = 0;
         const tutSteps = [
             { title: "Objetivo de Vitória", text: "Para vencer a partida você deve dominar no mínimo 33 territórios OU capturar/eliminar simultaneamente o Sinhô e a Sinhá do adversário." },
@@ -811,9 +1211,10 @@
             initGame();
         }
 
-        // --- GERENCIAMENTO DE MODOS E TELA PRINCIPAL ---
+        // --- GERENCIAMENTO DE MODOS ---
         function startSelectedMode(mode) {
             gameMode = mode;
+            document.getElementById('coin-shop-menu').style.display = 'none';
             document.getElementById('game-modes-menu').style.display = 'none';
             document.getElementById('bot-difficulty-menu').style.display = 'none';
             document.getElementById('active-game-area').style.display = 'flex';
@@ -831,6 +1232,7 @@
         }
 
         function backToMainMenu() {
+            document.getElementById('coin-shop-menu').style.display = 'none';
             document.getElementById('bot-difficulty-menu').style.display = 'none';
             document.getElementById('game-modes-menu').style.display = 'flex';
         }
@@ -844,6 +1246,7 @@
             disconnectOnlineSession();
             document.getElementById('active-game-area').style.display = 'none';
             document.getElementById('bot-difficulty-menu').style.display = 'none';
+            document.getElementById('coin-shop-menu').style.display = 'none';
             document.getElementById('game-modes-menu').style.display = 'flex';
         }
 
@@ -859,11 +1262,8 @@
             myPlayerId = 1;
             const statusEl = document.getElementById('online-status');
             if (statusEl) statusEl.textContent = "Desconectado. Crie ou entre numa sala.";
-            const roomInput = document.getElementById('room-code-input');
-            if (roomInput) roomInput.value = "";
         }
 
-        // --- LÓGICA DO JOGO IMPÉRIO ---
         function createPiece(type, owner) {
             return { type, originalOwner: owner, currentOwner: owner };
         }
@@ -892,7 +1292,6 @@
                 board[7][c].piece = createPiece(backRowSetup[c], 1);
             }
 
-            // Inicializa os elementos do tabuleiro no DOM apenas uma vez
             if (squareElements.length === 0) {
                 const boardEl = document.getElementById('main-board');
                 boardEl.innerHTML = '';
@@ -1089,152 +1488,28 @@
             }
         }
 
-        // --- FUNÇÕES DE APOIO PARA O BOT (MODO DIFÍCIL) ---
-        function isProtected(boardState, piece) {
-            if (!piece) return false;
-            let r = -1, c = -1;
-            
-            for (let i = 0; i < BOARD_SIZE; i++) {
-                for (let j = 0; j < BOARD_SIZE; j++) {
-                    if (boardState[i][j].piece === piece) {
-                        r = i;
-                        c = j;
-                        break;
-                    }
-                }
-                if (r !== -1) break;
-            }
-            if (r === -1) return false;
-
-            const owner = piece.currentOwner;
-            let alliedCount = 0;
-
-            const dirs = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1], [-2,0], [2,0], [0,-2], [0,2]];
-            for (const [dr, dc] of dirs) {
-                const nr = r + dr;
-                const nc = c + dc;
-                if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE) {
-                    const neighborPiece = boardState[nr][nc].piece;
-                    if (neighborPiece && neighborPiece.currentOwner === owner) {
-                        alliedCount++;
-                    }
-                }
-            }
-            return alliedCount >= 2;
-        }
-
-        function isInDanger(boardState, leaderPiece) {
-            if (!leaderPiece) return false;
-            let lr = -1, lc = -1;
-
-            for (let i = 0; i < BOARD_SIZE; i++) {
-                for (let j = 0; j < BOARD_SIZE; j++) {
-                    if (boardState[i][j].piece === leaderPiece) {
-                        lr = i;
-                        lc = j;
-                        break;
-                    }
-                }
-                if (lr !== -1) break;
-            }
-            if (lr === -1) return false;
-
-            for (let r = 0; r < BOARD_SIZE; r++) {
-                for (let c = 0; c < BOARD_SIZE; c++) {
-                    const cell = boardState[r][c];
-                    if (cell.piece && cell.piece.currentOwner === 1) {
-                        const enemyMoves = getValidMoves(r, c);
-                        for (const m of enemyMoves) {
-                            if (m.r === lr && m.c === lc) {
-                                return true;
-                            }
-                        }
-                    }
-                }
-            }
-            return false;
-        }
-
-        function getTerritoryExpansionScore(boardState, piece) {
-            if (!piece || piece.currentOwner !== 1) return 0;
-            let r = -1, c = -1;
-            for (let i = 0; i < BOARD_SIZE; i++) {
-                for (let j = 0; j < BOARD_SIZE; j++) {
-                    if (boardState[i][j].piece === piece) { r = i; c = j; break; }
-                }
-                if (r !== -1) break;
-            }
-            if (r === -1) return 0;
-
-            let territoryControlCount = 0;
-            for (let i = 0; i < BOARD_SIZE; i++) {
-                for (let j = 0; j < BOARD_SIZE; j++) {
-                    if (boardState[i][j].territory === 1) territoryControlCount++;
-                }
-            }
-            let advancementScore = (BOARD_SIZE - r) * 10 + territoryControlCount;
-            return advancementScore;
-        }
-
-        // --- INTELIGÊNCIA ARTIFICIAL (BOT) POR NÍVEIS ---
         function makeAiMove() {
             if (gameOver || gameMode !== 'ai' || currentTurn !== 2) return;
-
             const allMoves = [];
 
             for (let r = 0; r < BOARD_SIZE; r++) {
                 for (let c = 0; c < BOARD_SIZE; c++) {
-                    const cell = board[r][c];
-                    if (!cell.piece || cell.piece.currentOwner !== 2) continue;
-
-                    const moves = getValidMoves(r, c);
-                    for (const m of moves) {
-                        const moveInfo = {
-                            r: m.r,
-                            c: m.c,
-                            action: m.action,
-                            fromR: r,
-                            fromC: c
-                        };
-
-                        const score = evaluateMoveForDifficulty(moveInfo, aiDifficulty);
-                        if (Number.isFinite(score)) {
-                            allMoves.push({
-                                fromR: r,
-                                fromC: c,
-                                toR: m.r,
-                                toC: m.c,
-                                info: m,
-                                score
-                            });
+                    if (board[r][c].piece && board[r][c].piece.currentOwner === 2) {
+                        const moves = getValidMoves(r, c);
+                        for (const m of moves) {
+                            const moveInfo = { r: m.r, c: m.c, action: m.action, fromR: r, fromC: c };
+                            const score = evaluateMoveForDifficulty(moveInfo, aiDifficulty);
+                            if (Number.isFinite(score)) {
+                                allMoves.push({ fromR: r, fromC: c, toR: m.r, toC: m.c, info: m, score });
+                            }
                         }
                     }
                 }
             }
 
             if (allMoves.length === 0) return;
-
-            let chosen;
-            if (aiDifficulty === 'easy') {
-                const simpleMoves = allMoves.filter(move => move.info.action === 'move');
-                if (simpleMoves.length > 0 && Math.random() > 0.3) {
-                    chosen = simpleMoves[Math.floor(Math.random() * simpleMoves.length)];
-                } else {
-                    chosen = allMoves[Math.floor(Math.random() * allMoves.length)];
-                }
-            } else if (aiDifficulty === 'medium') {
-                allMoves.sort((a, b) => b.score - a.score);
-                const topChoices = allMoves.slice(0, Math.min(3, allMoves.length));
-                chosen = topChoices[Math.floor(Math.random() * topChoices.length)];
-            } else {
-                allMoves.sort((a, b) => b.score - a.score);
-                chosen = allMoves[0];
-            }
-
-            if (!chosen || !Number.isInteger(chosen.fromR) || !Number.isInteger(chosen.fromC) ||
-                !Number.isInteger(chosen.toR) || !Number.isInteger(chosen.toC)) {
-                return;
-            }
+            allMoves.sort((a, b) => b.score - a.score);
+            const chosen = allMoves[0];
 
             executeMove(chosen.fromR, chosen.fromC, chosen.toR, chosen.toC, chosen.info, true);
             renderBoard();
@@ -1242,89 +1517,26 @@
 
         function evaluateMoveForDifficulty(moveInfo, difficulty) {
             let score = 0;
-
-            if (!moveInfo || !Number.isInteger(moveInfo.r) || !Number.isInteger(moveInfo.c) ||
-                !Number.isInteger(moveInfo.fromR) || !Number.isInteger(moveInfo.fromC) ||
-                !board[moveInfo.r] || !board[moveInfo.fromR]) {
-                return -Infinity;
-            }
-
             const target = board[moveInfo.r][moveInfo.c];
             const source = board[moveInfo.fromR][moveInfo.fromC];
             if (!target || !source || !source.piece) return -Infinity;
 
-            const movingPiece = source.piece;
-
             if (difficulty === 'easy') {
                 if (moveInfo.action === 'capture') score += 10;
-                if (target.territory === 1) score += 5;
                 return score + Math.random() * 10;
             }
 
             if (difficulty === 'medium') {
-                if (moveInfo.action === 'capture' && target.piece) {
-                    if (target.piece.type === 'sinho' || target.piece.type === 'sinha') score += 70;
-                    else score += 15;
-                }
+                if (moveInfo.action === 'capture') score += 15;
                 if (target.territory === 1) score += 15;
-                if (moveInfo.action === 'convert' || moveInfo.action === 'recover') score += 25;
                 return score + Math.random() * 5;
             }
 
-            // --- MODO DIFÍCIL: APLICANDO AS 3 PRIORIDADES REFINADAS ---
-            let botSinho = null, botSinha = null;
-            for (let r = 0; r < BOARD_SIZE; r++) {
-                for (let c = 0; c < BOARD_SIZE; c++) {
-                    const p = board[r][c].piece;
-                    if (p && p.currentOwner === 2) {
-                        if (p.type === 'sinho') botSinho = p;
-                        if (p.type === 'sinha') botSinha = p;
-                    }
-                }
-            }
-
-            const sinhoInDanger = botSinho ? isInDanger(board, botSinho) : false;
-            const sinhaInDanger = botSinha ? isInDanger(board, botSinha) : false;
-            const leadersInDanger = sinhoInDanger || sinhaInDanger;
-
-            // Prioridade 1: Defesa e Fuga Crítica
-            if (leadersInDanger) {
-                if (movingPiece.type === 'sinho' || movingPiece.type === 'sinha') {
-                    score += 1000;
-                    if (isProtected(board, movingPiece)) {
-                        score += 500;
-                    }
-                }
-                if (moveInfo.action === 'capture' && target.piece && target.piece.currentOwner === 1) {
-                    score += 1200;
-                }
-            }
-
-            // Prioridade 2: Ataque à Peça de Maior Expansão Territorial (Quando seguros)
-            if (!leadersInDanger) {
-                if (moveInfo.action === 'capture' && target.piece && target.piece.currentOwner === 1) {
-                    let expansionScore = getTerritoryExpansionScore(board, target.piece);
-                    score += 150 + expansionScore;
-                }
-            }
-
-            // Prioridade 3: Expansão e Domínio de Territórios (Modo Econômico)
-            if (!leadersInDanger && moveInfo.action === 'move') {
-                if (target.territory !== 2) {
-                    score += 40;
-                }
-            }
-
-            if (moveInfo.action === 'convert' || moveInfo.action === 'recover') {
-                score += 90;
-            }
-
-            score += (moveInfo.r) * 5;
-
+            if (moveInfo.action === 'capture') score += 100;
+            if (target.territory === 1) score += 40;
             return score + Math.random() * 2;
         }
 
-        // --- CONDIÇÃO DE VITÓRIA ---
         function checkWinCondition() {
             let p1Territories = 0, p2Territories = 0;
             let p1Sinho = false, p1Sinha = false;
@@ -1358,18 +1570,14 @@
                 return;
             }
 
-            if (p1Territories >= 33) {
-                triggerVictory(1, `Dominou ${p1Territories} territórios!`);
-            } else if (p2Territories >= 33) {
-                triggerVictory(2, `Dominou ${p2Territories} territórios!`);
-            }
+            if (p1Territories >= 33) triggerVictory(1, `Dominou ${p1Territories} territórios!`);
+            else if (p2Territories >= 33) triggerVictory(2, `Dominou ${p2Territories} territórios!`);
         }
 
         function triggerVictory(winner, reason) {
             gameOver = true;
             playSound(800, 0.4);
-            const winnerName = winner === 1 ? "Jogador 1 (Azul)" : (gameMode === 'ai' ? `Bot (${aiDifficulty.toUpperCase()})` : "Jogador 2 (Vermelho)");
-            
+            const winnerName = winner === 1 ? "Jogador 1 (Azul)" : "Jogador 2 (Vermelho)";
             document.getElementById('victory-title').textContent = `🏆 ${winnerName} Venceu!`;
             document.getElementById('victory-desc').textContent = reason;
             document.getElementById('victory-overlay').style.display = 'flex';
@@ -1385,18 +1593,10 @@
             }
             document.getElementById('p1-score').textContent = p1Count;
             document.getElementById('p2-score').textContent = p2Count;
-
             document.body.setAttribute('data-turn', currentTurn);
-
-            const statusText = document.getElementById('game-status-text');
-            if (currentTurn === 1) {
-                statusText.textContent = "Vez do Jogador 1 (Azul)";
-            } else {
-                statusText.textContent = gameMode === 'ai' ? `Vez do Bot (${aiDifficulty})...` : "Vez do Jogador 2 (Vermelho)";
-            }
+            document.getElementById('game-status-text').textContent = currentTurn === 1 ? "Vez do Jogador 1 (Azul)" : "Vez do Jogador 2 (Vermelho)";
         }
 
-        // --- MULTIPLAYER ONLINE (WEBRTC) ---
         function setupPeer() {
             if (peer) return;
             const randomId = Math.floor(100000 + Math.random() * 900000).toString();
@@ -1413,27 +1613,19 @@
                 document.getElementById('online-status').textContent = "Adversário conectado!";
                 initGame();
             });
-
-            peer.on('error', (err) => {
-                console.error(err);
-                document.getElementById('online-status').textContent = "Erro na conexão.";
-            });
         }
 
         function createOnlineRoom() {
             disconnectOnlineSession();
             setupPeer();
             setTimeout(() => {
-                if (peer && peer.id) {
-                    prompt("Envie este código para o seu oponente:", peer.id);
-                }
+                if (peer && peer.id) prompt("Envie este código para o seu oponente:", peer.id);
             }, 500);
         }
 
         function joinOnlineRoom() {
             const code = document.getElementById('room-code-input').value.trim();
             if (!code) return alert("Digite um código válido");
-            
             disconnectOnlineSession();
 
             peer = new Peer();
@@ -1443,11 +1635,6 @@
                 setupConnectionListeners();
                 document.getElementById('online-status').textContent = "Conectado à sala!";
                 initGame();
-            });
-
-            peer.on('error', (err) => {
-                console.error(err);
-                document.getElementById('online-status').textContent = "Erro ao entrar na sala.";
             });
         }
 
@@ -1459,17 +1646,11 @@
                     renderBoard();
                 }
             });
-
-            conn.on('close', () => {
-                alert("O outro jogador se desconectou da sala.");
-                disconnectOnlineSession();
-            });
         }
 
-        // --- MODO COMPETIÇÃO ---
         function startCompetitiveMatch() {
             const betVal = document.getElementById('bet-amount').value;
-            alert(`Buscando adversário para partida no valor de R$ ${betVal}...`);
+            alert(`Buscando adversário para partida no valor de ${betVal} moedas...`);
             switchScreen(1);
             startSelectedMode('online');
         }
