@@ -496,10 +496,20 @@
             <!-- TELA DO MEIO: PRINCIPAL (SELEÇÃO DE MODOS DE JOGO) -->
             <div class="screen" id="screen-main">
                 
-                <!-- MENU DE SELEÇÃO DE MODOS DE JOGO POR IMAGEM -->
+                <!-- MENU PRINCIPAL DE SELEÇÃO DE MODOS DE JOGO -->
                 <div id="game-modes-menu" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
                     
-                    <!-- MODO 1: LOCAL 1x1 -->
+                    <!-- MODO 1: CONTRA BOT (ABRE SUB-MENU DE NÍVEIS) -->
+                    <div class="mode-card">
+                        <img src="modo-bot.png" alt="Modo 1 vs Bot" onerror="this.src='https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400'">
+                        <div class="mode-card-content">
+                            <h3>Contra Bot</h3>
+                            <button class="btn" onclick="showBotDifficultyMenu()">JOGAR</button>
+                        </div>
+                    </div>
+
+                    
+                    <!-- MODO 2: LOCAL 1x1 -->
                     <div class="mode-card">
                         <img src="modo-local.png" alt="Modo 1x1 Local" onerror="this.src='https://images.unsplash.com/photo-1612287233306-60451f22e8f1?w=400'">
                         <div class="mode-card-content">
@@ -508,15 +518,7 @@
                         </div>
                     </div>
 
-                    <!-- MODO 2: CONTRA BOT -->
-                    <div class="mode-card">
-                        <img src="modo-bot.png" alt="Modo 1 vs Bot" onerror="this.src='https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400'">
-                        <div class="mode-card-content">
-                            <h3>Contra Bot</h3>
-                            <button class="btn" onclick="startSelectedMode('ai')">JOGAR</button>
-                        </div>
-                    </div>
-
+                    
                     <!-- MODO 3: ONLINE 1x1 -->
                     <div class="mode-card">
                         <img src="modo-online.png" alt="Modo 1x1 Online" onerror="this.src='https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400'">
@@ -526,6 +528,20 @@
                         </div>
                     </div>
 
+                </div>
+
+                <!-- SUB-MENU DE ESCOLHA DE DIFICULDADE DO BOT -->
+                <div id="bot-difficulty-menu" style="display: none; width: 100%; max-width: 360px; flex-direction: column; align-items: center;">
+                    <div class="card" style="text-align: center;">
+                        <h2>Escolha a Dificuldade</h2>
+                        <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 15px;">Selecione o nível de inteligência do oponente artificial:</p>
+                        
+                        <button class="btn" style="background: linear-gradient(135deg, #48bb78, #38a169); color: #fff; margin-bottom: 10px;" onclick="startAiMatch('easy')">Fácil</button>
+                        <button class="btn" style="background: linear-gradient(135deg, #ecc94b, #d69e2e); color: #111; margin-bottom: 10px;" onclick="startAiMatch('medium')">Médio</button>
+                        <button class="btn" style="background: linear-gradient(135deg, #e53e3e, #c53030); color: #fff; margin-bottom: 15px;" onclick="startAiMatch('hard')">Difícil</button>
+                        
+                        <button class="btn btn-secondary" onclick="backToMainMenu()">← Voltar</button>
+                    </div>
                 </div>
 
                 <!-- ÁREA DE JOGO (TABULEIRO E CONTROLES) -->
@@ -621,10 +637,12 @@
         // Estado do Jogo
         const BOARD_SIZE = 8;
         let board = [];
+        let squareElements = []; // Cache dos elementos DOM para otimização de clique
         let currentTurn = 1; 
         let selectedSquare = null;
         let validMoves = [];
         let gameMode = 'pvp'; // 'pvp', 'ai', 'online'
+        let aiDifficulty = 'medium'; // 'easy', 'medium', 'hard'
         let gameOver = false;
 
         // PeerJS (Online)
@@ -775,6 +793,7 @@
         function startSelectedMode(mode) {
             gameMode = mode;
             document.getElementById('game-modes-menu').style.display = 'none';
+            document.getElementById('bot-difficulty-menu').style.display = 'none';
             document.getElementById('active-game-area').style.display = 'flex';
             document.getElementById('online-controls').style.display = mode === 'online' ? 'block' : 'none';
             
@@ -784,9 +803,25 @@
             initGame();
         }
 
+        function showBotDifficultyMenu() {
+            document.getElementById('game-modes-menu').style.display = 'none';
+            document.getElementById('bot-difficulty-menu').style.display = 'flex';
+        }
+
+        function backToMainMenu() {
+            document.getElementById('bot-difficulty-menu').style.display = 'none';
+            document.getElementById('game-modes-menu').style.display = 'flex';
+        }
+
+        function startAiMatch(difficulty) {
+            aiDifficulty = difficulty;
+            startSelectedMode('ai');
+        }
+
         function backToModesMenu() {
             disconnectOnlineSession();
             document.getElementById('active-game-area').style.display = 'none';
+            document.getElementById('bot-difficulty-menu').style.display = 'none';
             document.getElementById('game-modes-menu').style.display = 'flex';
         }
 
@@ -835,35 +870,50 @@
                 board[7][c].piece = createPiece(backRowSetup[c], 1);
             }
 
+            // Inicializa os elementos do tabuleiro no DOM apenas uma vez
+            if (squareElements.length === 0) {
+                const boardEl = document.getElementById('main-board');
+                boardEl.innerHTML = '';
+                for (let r = 0; r < BOARD_SIZE; r++) {
+                    squareElements[r] = [];
+                    for (let c = 0; c < BOARD_SIZE; c++) {
+                        const squareEl = document.createElement('div');
+                        squareEl.onclick = () => handleSquareClick(r, c);
+                        boardEl.appendChild(squareEl);
+                        squareElements[r][c] = squareEl;
+                    }
+                }
+            }
+
             renderBoard();
             updateUI();
         }
 
         function renderBoard() {
-            const boardEl = document.getElementById('main-board');
-            boardEl.innerHTML = '';
-
             for (let r = 0; r < BOARD_SIZE; r++) {
                 for (let c = 0; c < BOARD_SIZE; c++) {
                     const cell = board[r][c];
-                    const squareEl = document.createElement('div');
+                    const squareEl = squareElements[r][c];
                     
                     const isLight = (r + c) % 2 === 0;
-                    squareEl.className = `square ${isLight ? 'light' : 'dark'}`;
+                    let className = `square ${isLight ? 'light' : 'dark'}`;
                     
-                    if (cell.territory === 1) squareEl.classList.add('territory-p1');
-                    if (cell.territory === 2) squareEl.classList.add('territory-p2');
+                    if (cell.territory === 1) className += ' territory-p1';
+                    if (cell.territory === 2) className += ' territory-p2';
 
                     if (selectedSquare && selectedSquare.r === r && selectedSquare.c === c) {
-                        squareEl.classList.add('selected');
+                        className += ' selected';
                     }
 
                     const move = validMoves.find(m => m.r === r && m.c === c);
                     if (move) {
-                        if (move.action === 'move') squareEl.classList.add('valid-move');
-                        else if (move.action === 'capture') squareEl.classList.add('valid-capture');
-                        else if (move.action === 'convert' || move.action === 'recover') squareEl.classList.add('valid-convert');
+                        if (move.action === 'move') className += ' valid-move';
+                        else if (move.action === 'capture') className += ' valid-capture';
+                        else if (move.action === 'convert' || move.action === 'recover') className += ' valid-convert';
                     }
+
+                    squareEl.className = className;
+                    squareEl.innerHTML = '';
 
                     if (cell.piece) {
                         const pieceEl = document.createElement('div');
@@ -886,9 +936,6 @@
 
                         squareEl.appendChild(pieceEl);
                     }
-
-                    squareEl.onclick = () => handleSquareClick(r, c);
-                    boardEl.appendChild(squareEl);
                 }
             }
         }
@@ -1020,43 +1067,239 @@
             }
         }
 
-        // --- INTELIGÊNCIA ARTIFICIAL (BOT) ---
+        // --- FUNÇÕES DE APOIO PARA O BOT (MODO DIFÍCIL) ---
+        function isProtected(boardState, piece) {
+            if (!piece) return false;
+            let r = -1, c = -1;
+            
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                for (let j = 0; j < BOARD_SIZE; j++) {
+                    if (boardState[i][j].piece === piece) {
+                        r = i;
+                        c = j;
+                        break;
+                    }
+                }
+                if (r !== -1) break;
+            }
+            if (r === -1) return false;
+
+            const owner = piece.currentOwner;
+            let alliedCount = 0;
+
+            const dirs = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1], [-2,0], [2,0], [0,-2], [0,2]];
+            for (const [dr, dc] of dirs) {
+                const nr = r + dr;
+                const nc = c + dc;
+                if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE) {
+                    const neighborPiece = boardState[nr][nc].piece;
+                    if (neighborPiece && neighborPiece.currentOwner === owner) {
+                        alliedCount++;
+                    }
+                }
+            }
+            return alliedCount >= 2;
+        }
+
+        function isInDanger(boardState, leaderPiece) {
+            if (!leaderPiece) return false;
+            let lr = -1, lc = -1;
+
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                for (let j = 0; j < BOARD_SIZE; j++) {
+                    if (boardState[i][j].piece === leaderPiece) {
+                        lr = i;
+                        lc = j;
+                        break;
+                    }
+                }
+                if (lr !== -1) break;
+            }
+            if (lr === -1) return false;
+
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    const cell = boardState[r][c];
+                    if (cell.piece && cell.piece.currentOwner === 1) {
+                        const enemyMoves = getValidMoves(r, c);
+                        for (const m of enemyMoves) {
+                            if (m.r === lr && m.c === lc) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        function getTerritoryExpansionScore(boardState, piece) {
+            if (!piece || piece.currentOwner !== 1) return 0;
+            let r = -1, c = -1;
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                for (let j = 0; j < BOARD_SIZE; j++) {
+                    if (boardState[i][j].piece === piece) { r = i; c = j; break; }
+                }
+                if (r !== -1) break;
+            }
+            if (r === -1) return 0;
+
+            let territoryControlCount = 0;
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                for (let j = 0; j < BOARD_SIZE; j++) {
+                    if (boardState[i][j].territory === 1) territoryControlCount++;
+                }
+            }
+            let advancementScore = (BOARD_SIZE - r) * 10 + territoryControlCount;
+            return advancementScore;
+        }
+
+        // --- INTELIGÊNCIA ARTIFICIAL (BOT) POR NÍVEIS ---
         function makeAiMove() {
-            if (gameOver || currentTurn !== 2) return;
+            if (gameOver || gameMode !== 'ai' || currentTurn !== 2) return;
+
             const allMoves = [];
 
             for (let r = 0; r < BOARD_SIZE; r++) {
                 for (let c = 0; c < BOARD_SIZE; c++) {
-                    if (board[r][c].piece && board[r][c].piece.currentOwner === 2) {
-                        const moves = getValidMoves(r, c);
-                        moves.forEach(m => {
+                    const cell = board[r][c];
+                    if (!cell.piece || cell.piece.currentOwner !== 2) continue;
+
+                    const moves = getValidMoves(r, c);
+                    for (const m of moves) {
+                        const moveInfo = {
+                            r: m.r,
+                            c: m.c,
+                            action: m.action,
+                            fromR: r,
+                            fromC: c
+                        };
+
+                        const score = evaluateMoveForDifficulty(moveInfo, aiDifficulty);
+                        if (Number.isFinite(score)) {
                             allMoves.push({
-                                fromR: r, fromC: c, toR: m.r, toC: m.c, info: m,
-                                score: evaluateMove(m)
+                                fromR: r,
+                                fromC: c,
+                                toR: m.r,
+                                toC: m.c,
+                                info: m,
+                                score
                             });
-                        });
+                        }
                     }
                 }
             }
 
-            if (allMoves.length > 0) {
+            if (allMoves.length === 0) return;
+
+            let chosen;
+            if (aiDifficulty === 'easy') {
+                const simpleMoves = allMoves.filter(move => move.info.action === 'move');
+                if (simpleMoves.length > 0 && Math.random() > 0.3) {
+                    chosen = simpleMoves[Math.floor(Math.random() * simpleMoves.length)];
+                } else {
+                    chosen = allMoves[Math.floor(Math.random() * allMoves.length)];
+                }
+            } else if (aiDifficulty === 'medium') {
                 allMoves.sort((a, b) => b.score - a.score);
-                const chosen = allMoves[0];
-                executeMove(chosen.fromR, chosen.fromC, chosen.toR, chosen.toC, chosen.info, true);
-                renderBoard();
+                const topChoices = allMoves.slice(0, Math.min(3, allMoves.length));
+                chosen = topChoices[Math.floor(Math.random() * topChoices.length)];
+            } else {
+                allMoves.sort((a, b) => b.score - a.score);
+                chosen = allMoves[0];
             }
+
+            if (!chosen || !Number.isInteger(chosen.fromR) || !Number.isInteger(chosen.fromC) ||
+                !Number.isInteger(chosen.toR) || !Number.isInteger(chosen.toC)) {
+                return;
+            }
+
+            executeMove(chosen.fromR, chosen.fromC, chosen.toR, chosen.toC, chosen.info, true);
+            renderBoard();
         }
 
-        function evaluateMove(moveInfo) {
+        function evaluateMoveForDifficulty(moveInfo, difficulty) {
             let score = 0;
-            const target = board[moveInfo.r][moveInfo.c];
-            if (moveInfo.action === 'capture' && target.piece) {
-                if (target.piece.type === 'sinho' || target.piece.type === 'sinha') score += 100;
-                else score += 20;
+
+            if (!moveInfo || !Number.isInteger(moveInfo.r) || !Number.isInteger(moveInfo.c) ||
+                !Number.isInteger(moveInfo.fromR) || !Number.isInteger(moveInfo.fromC) ||
+                !board[moveInfo.r] || !board[moveInfo.fromR]) {
+                return -Infinity;
             }
-            if (target.territory === 1) score += 25;
-            if (moveInfo.action === 'convert' || moveInfo.action === 'recover') score += 40;
-            return score;
+
+            const target = board[moveInfo.r][moveInfo.c];
+            const source = board[moveInfo.fromR][moveInfo.fromC];
+            if (!target || !source || !source.piece) return -Infinity;
+
+            const movingPiece = source.piece;
+
+            if (difficulty === 'easy') {
+                if (moveInfo.action === 'capture') score += 10;
+                if (target.territory === 1) score += 5;
+                return score + Math.random() * 10;
+            }
+
+            if (difficulty === 'medium') {
+                if (moveInfo.action === 'capture' && target.piece) {
+                    if (target.piece.type === 'sinho' || target.piece.type === 'sinha') score += 70;
+                    else score += 15;
+                }
+                if (target.territory === 1) score += 15;
+                if (moveInfo.action === 'convert' || moveInfo.action === 'recover') score += 25;
+                return score + Math.random() * 5;
+            }
+
+            // --- MODO DIFÍCIL: APLICANDO AS 3 PRIORIDADES REFINADAS ---
+            let botSinho = null, botSinha = null;
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    const p = board[r][c].piece;
+                    if (p && p.currentOwner === 2) {
+                        if (p.type === 'sinho') botSinho = p;
+                        if (p.type === 'sinha') botSinha = p;
+                    }
+                }
+            }
+
+            const sinhoInDanger = botSinho ? isInDanger(board, botSinho) : false;
+            const sinhaInDanger = botSinha ? isInDanger(board, botSinha) : false;
+            const leadersInDanger = sinhoInDanger || sinhaInDanger;
+
+            // Prioridade 1: Defesa e Fuga Crítica
+            if (leadersInDanger) {
+                if (movingPiece.type === 'sinho' || movingPiece.type === 'sinha') {
+                    score += 1000;
+                    if (isProtected(board, movingPiece)) {
+                        score += 500;
+                    }
+                }
+                if (moveInfo.action === 'capture' && target.piece && target.piece.currentOwner === 1) {
+                    score += 1200;
+                }
+            }
+
+            // Prioridade 2: Ataque à Peça de Maior Expansão Territorial (Quando seguros)
+            if (!leadersInDanger) {
+                if (moveInfo.action === 'capture' && target.piece && target.piece.currentOwner === 1) {
+                    let expansionScore = getTerritoryExpansionScore(board, target.piece);
+                    score += 150 + expansionScore;
+                }
+            }
+
+            // Prioridade 3: Expansão e Domínio de Territórios (Modo Econômico)
+            if (!leadersInDanger && moveInfo.action === 'move') {
+                if (target.territory !== 2) {
+                    score += 40;
+                }
+            }
+
+            if (moveInfo.action === 'convert' || moveInfo.action === 'recover') {
+                score += 90;
+            }
+
+            score += (moveInfo.r) * 5;
+
+            return score + Math.random() * 2;
         }
 
         // --- CONDIÇÃO DE VITÓRIA ---
@@ -1103,7 +1346,7 @@
         function triggerVictory(winner, reason) {
             gameOver = true;
             playSound(800, 0.4);
-            const winnerName = winner === 1 ? "Jogador 1 (Azul)" : (gameMode === 'ai' ? "Bot (IA)" : "Jogador 2 (Vermelho)");
+            const winnerName = winner === 1 ? "Jogador 1 (Azul)" : (gameMode === 'ai' ? `Bot (${aiDifficulty.toUpperCase()})` : "Jogador 2 (Vermelho)");
             
             document.getElementById('victory-title').textContent = `🏆 ${winnerName} Venceu!`;
             document.getElementById('victory-desc').textContent = reason;
@@ -1121,14 +1364,13 @@
             document.getElementById('p1-score').textContent = p1Count;
             document.getElementById('p2-score').textContent = p2Count;
 
-            // Atualiza o atributo do body para alternar as cores dos caminhos via CSS
             document.body.setAttribute('data-turn', currentTurn);
 
             const statusText = document.getElementById('game-status-text');
             if (currentTurn === 1) {
                 statusText.textContent = "Vez do Jogador 1 (Azul)";
             } else {
-                statusText.textContent = gameMode === 'ai' ? "Vez do Bot (IA)..." : "Vez do Jogador 2 (Vermelho)";
+                statusText.textContent = gameMode === 'ai' ? `Vez do Bot (${aiDifficulty})...` : "Vez do Jogador 2 (Vermelho)";
             }
         }
 
