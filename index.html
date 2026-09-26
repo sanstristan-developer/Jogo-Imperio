@@ -44,17 +44,6 @@
             flex-direction: column;
         }
 
-        /* Orientação Horizontal vs Vertical */
-        body.landscape-mode {
-            transform: rotate(-90deg);
-            transform-origin: left top;
-            width: 100vh;
-            height: 100vw;
-            position: absolute;
-            top: 100%;
-            left: 0;
-        }
-
         /* TELA DE AUTENTICAÇÃO / LOGIN */
         #auth-overlay {
             position: fixed;
@@ -478,15 +467,7 @@
 
                 <div class="card">
                     <h2>Configurações do Jogo</h2>
-                    <div class="input-group">
-                        <label>Orientação da Tela:</label>
-                        <div class="btn-group">
-                            <button class="btn" id="btn-portrait" onclick="setOrientation('portrait')">Vertical</button>
-                            <button class="btn btn-secondary" id="btn-landscape" onclick="setOrientation('landscape')">Horizontal</button>
-                        </div>
-                    </div>
-
-                    <div class="input-group" style="margin-top: 10px;">
+                    <div class="input-group" style="margin-top: 5px;">
                         <label>Efeitos de Som:</label>
                         <button class="btn btn-secondary" id="sound-toggle" onclick="toggleSound()">Som: ATIVADO</button>
                     </div>
@@ -625,6 +606,43 @@
             Competição
         </button>
     </nav>
+    
+    <script type="module">
+    import { initializeApp } 
+        from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+
+    import {
+        getAuth,
+        GoogleAuthProvider,
+        signInWithPopup,
+        onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+
+    import {
+        getFirestore,
+        doc,
+        getDoc,
+        setDoc,
+        updateDoc
+    } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCeR8E4-Bf3lW_KYu4J_hUD2KaUU6Pbz2A",
+        authDomain: "jogo-imperio.firebaseapp.com",
+        projectId: "jogo-imperio",
+        storageBucket: "jogo-imperio.firebasestorage.app",
+        messagingSenderId: "923011298761",
+        appId: "1:923011298761:web:b467b70825619b257ea418"
+    };
+
+    const app = initializeApp(firebaseConfig);
+
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const googleProvider = new GoogleAuthProvider();
+
+    console.log("Firebase conectado!");
+</script>
 
     <script>
         // --- ESTADO GLOBAL DA APLICAÇÃO ---
@@ -732,18 +750,6 @@
             document.querySelectorAll('.avatar-option').forEach(opt => opt.classList.remove('selected'));
             el.classList.add('selected');
             document.getElementById('profile-avatar-display').textContent = symbol;
-        }
-
-        function setOrientation(mode) {
-            if (mode === 'landscape') {
-                document.body.classList.add('landscape-mode');
-                document.getElementById('btn-landscape').classList.remove('btn-secondary');
-                document.getElementById('btn-portrait').classList.add('btn-secondary');
-            } else {
-                document.body.classList.remove('landscape-mode');
-                document.getElementById('btn-portrait').classList.remove('btn-secondary');
-                document.getElementById('btn-landscape').classList.add('btn-secondary');
-            }
         }
 
         function toggleSound() {
